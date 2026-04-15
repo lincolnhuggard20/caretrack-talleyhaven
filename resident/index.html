@@ -418,18 +418,22 @@ document.getElementById("header-date").textContent = new Date().toLocaleDateStri
 firebase.initializeApp(FIREBASE_CONFIG);
 const db = firebase.database();
 
-// ── DATE HELPERS (Brisbane time) ──
-function getAEST() {
-  return new Date(new Date().toLocaleString("en-AU", { timeZone: "Australia/Brisbane" }));
+// ── DATE HELPERS (Brisbane = UTC+10, no DST) ──
+function getBrisbaneISOString() {
+  const brisbane = new Date(Date.now() + 10 * 60 * 60 * 1000);
+  return brisbane.toISOString();
 }
-function getWeekKey(d = new Date()) {
-  const day = new Date(d);
-  const diff = day.getDate() - day.getDay() + (day.getDay() === 0 ? -6 : 1);
-  day.setDate(diff);
-  return "week_" + day.toISOString().split("T")[0];
+function getWeekKey() {
+  const iso = getBrisbaneISOString();
+  const d   = new Date(iso);
+  const day = d.getUTCDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  const monday = new Date(d);
+  monday.setUTCDate(d.getUTCDate() + diff);
+  return "week_" + monday.toISOString().split("T")[0];
 }
-function getDayKey(d = new Date()) {
-  return d.toISOString().split("T")[0];
+function getDayKey() {
+  return getBrisbaneISOString().split("T")[0];
 }
 
 // ── PIN ──
@@ -515,9 +519,8 @@ async function submitEntry() {
   btn.textContent = "Saving…";
 
   const now     = Date.now();
-  const aest    = getAEST();
-  const weekKey = getWeekKey(aest);
-  const dayKey  = getDayKey(aest);
+  const weekKey = getWeekKey();
+  const dayKey  = getDayKey();
 
   const entry = {
     timestamp:   now,
@@ -571,9 +574,8 @@ function resetForm() {
 
 // ── HISTORY (last 24 hrs only) ──
 function loadHistory() {
-  const aest    = getAEST();
-  const weekKey = getWeekKey(aest);
-  const dayKey  = getDayKey(aest);
+  const weekKey = getWeekKey();
+  const dayKey  = getDayKey();
   const cutoff  = Date.now() - 24 * 60 * 60 * 1000;
 
   db.ref(`wards/${ward}/residents/${resId}/entries/${weekKey}/${dayKey}`)
