@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>CareTrack — Entry</title>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+
+  :root {
+    --ward-primary: #2D6A4F;
+    --ward-accent:  #52B788;
+    --bg:     #0F1410;
+    --card:   #161D17;
+    --border: #1E2B1F;
+    --text:   #E8F0E9;
+    --muted:  #6B8C6D;
+    --danger: #E05252;
+    --warn:   #D4A24A;
+    --radius: 14px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100dvh;
+    padding: 0 0 60px;
+  }
+
+  /* ── Header ── */
+  .header {
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 20px;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .ward-pill {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: var(--ward-primary);
+    color: var(--ward-accent);
+  }
+  .resident-name {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+  .header-sub {
+    font-size: 12px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* ── PIN Gate ── */
+  #pin-gate {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 80dvh;
+    padding: 40px 24px;
+    gap: 24px;
+  }
+  .pin-title {
+    font-size: 28px;
+    font-weight: 600;
+    text-align: center;
+    letter-spacing: -0.03em;
+  }
+  .pin-sub { font-size: 14px; color: var(--muted); text-align: center; }
+
+  .pin-display {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+  }
+  .pin-dot {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    border: 2px solid var(--muted);
+    transition: all 0.2s;
+  }
+  .pin-dot.filled {
+    background: var(--ward-accent);
+    border-color: var(--ward-accent);
+    transform: scale(1.15);
+  }
+
+  .pin-pad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    width: 100%;
+    max-width: 280px;
+  }
+  .pin-key {
+    aspect-ratio: 1;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 22px;
+    font-weight: 500;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.12s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .pin-key:active { background: var(--ward-primary); transform: scale(0.96); }
+  .pin-key.clear { font-size: 14px; color: var(--muted); }
+  .pin-key.del { font-size: 18px; color: var(--warn); }
+
+  .pin-error {
+    color: var(--danger);
+    font-size: 13px;
+    text-align: center;
+    min-height: 18px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* ── Main content ── */
+  #main-content { display: none; }
+  #main-content.visible { display: block; }
+
+  .section {
+    margin: 0 16px 16px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .section-header {
+    padding: 14px 16px 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-icon {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    background: var(--ward-primary);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .section-title {
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  .section-body { padding: 16px; }
+
+  /* ── Toggle row ── */
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .toggle-label { font-size: 15px; font-weight: 500; }
+  .toggle-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  .toggle-switch {
+    position: relative;
+    width: 52px; height: 28px;
+    flex-shrink: 0;
+  }
+  .toggle-switch input { display: none; }
+  .toggle-track {
+    position: absolute; inset: 0;
+    background: var(--border);
+    border-radius: 14px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .toggle-track::after {
+    content: '';
+    position: absolute;
+    left: 3px; top: 3px;
+    width: 22px; height: 22px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.2s;
+  }
+  .toggle-switch input:checked ~ .toggle-track {
+    background: var(--ward-accent);
+  }
+  .toggle-switch input:checked ~ .toggle-track::after {
+    transform: translateX(24px);
+  }
+
+  /* ── Bristol grid ── */
+  .bristol-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-top: 14px;
+  }
+  .bristol-btn {
+    background: var(--bg);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 6px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+    color: var(--text);
+  }
+  .bristol-btn .type-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 18px;
+    font-weight: 500;
+    display: block;
+    color: var(--ward-accent);
+  }
+  .bristol-btn .type-desc {
+    font-size: 9px;
+    color: var(--muted);
+    display: block;
+    margin-top: 3px;
+    line-height: 1.3;
+  }
+  .bristol-btn.selected {
+    border-color: var(--ward-accent);
+    background: rgba(82, 183, 136, 0.12);
+  }
+  .bristol-btn:active { transform: scale(0.96); }
+
+  /* ── Meal grid ── */
+  .meal-grid { display: flex; flex-direction: column; gap: 12px; }
+  .meal-row { display: flex; align-items: center; gap: 10px; }
+  .meal-label {
+    font-size: 13px;
+    font-weight: 500;
+    width: 72px;
+    flex-shrink: 0;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 11px;
+  }
+  .pct-btns {
+    display: flex;
+    gap: 6px;
+    flex: 1;
+    flex-wrap: wrap;
+  }
+  .pct-btn {
+    flex: 1;
+    min-width: 42px;
+    padding: 8px 4px;
+    border: 1.5px solid var(--border);
+    background: var(--bg);
+    border-radius: 8px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+  }
+  .pct-btn.selected {
+    border-color: var(--ward-accent);
+    background: rgba(82, 183, 136, 0.12);
+    color: var(--ward-accent);
+  }
+  .pct-btn:active { transform: scale(0.96); }
+
+  /* ── Fluid ── */
+  .fluid-row {
+    display: flex; align-items: center; gap: 12px; margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+  }
+  .fluid-label { font-size: 13px; font-weight: 500; flex: 1; }
+  .fluid-input {
+    background: var(--bg);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 16px;
+    width: 110px;
+    text-align: center;
+  }
+  .fluid-input:focus { outline: none; border-color: var(--ward-accent); }
+  .fluid-unit { font-size: 13px; color: var(--muted); font-family: 'DM Mono', monospace; }
+
+  /* ── Behaviour checkboxes ── */
+  .behaviour-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .behaviour-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.15s;
+    border: 1.5px solid transparent;
+  }
+  .behaviour-item.checked {
+    background: rgba(208, 74, 74, 0.08);
+    border-color: rgba(208, 74, 74, 0.3);
+  }
+  .behaviour-item input { display: none; }
+  .behaviour-check {
+    width: 20px; height: 20px;
+    border-radius: 6px;
+    border: 1.5px solid var(--border);
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+    background: var(--bg);
+  }
+  .behaviour-item.checked .behaviour-check {
+    background: var(--danger);
+    border-color: var(--danger);
+  }
+  .behaviour-check::after {
+    content: '✓';
+    color: white;
+    font-size: 12px;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .behaviour-item.checked .behaviour-check::after { opacity: 1; }
+  .behaviour-text { font-size: 14px; font-weight: 400; }
+
+  .free-text {
+    margin-top: 12px;
+    width: 100%;
+    background: var(--bg);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    resize: none;
+    min-height: 80px;
+  }
+  .free-text:focus { outline: none; border-color: var(--ward-accent); }
+  .free-text::placeholder { color: var(--muted); }
+
+  /* ── Submit ── */
+  .submit-wrap { padding: 0 16px 16px; }
+  .submit-btn {
+    width: 100%;
+    padding: 16px;
+    border-radius: var(--radius);
+    border: none;
+    background: var(--ward-accent);
+    color: #0F1410;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: -0.01em;
+    transition: all 0.2s;
+  }
+  .submit-btn:active { transform: scale(0.98); }
+  .submit-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* ── History ── */
+  .history-title {
+    padding: 16px 16px 8px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .history-empty {
+    padding: 8px 16px 16px;
+    font-size: 13px;
+    color: var(--muted);
+    text-align: center;
+  }
+  .entry-card {
+    margin: 0 16px 10px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+  }
+  .entry-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .entry-time {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--ward-accent);
+  }
+  .entry-by {
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .entry-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .chip {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+    font-family: 'DM Mono', monospace;
+  }
+  .chip-bowels { background: rgba(82, 183, 136, 0.15); color: var(--ward-accent); }
+  .chip-meal   { background: rgba(212, 162, 74, 0.15); color: var(--warn); }
+  .chip-behav  { background: rgba(224, 82, 82, 0.15);  color: var(--danger); }
+
+  .entry-notes {
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--muted);
+    font-style: italic;
+    line-height: 1.5;
+  }
+
+  /* ── Toast ── */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--ward-accent);
+    color: #0F1410;
+    padding: 12px 24px;
+    border-radius: 40px;
+    font-weight: 600;
+    font-size: 14px;
+    z-index: 999;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    white-space: nowrap;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* divider */
+  .divider { height: 1px; background: var(--border); margin: 0 16px 16px; }
+</style>
+</head>
+<body>
+
+<!-- Header (always visible) -->
+<div class="header">
+  <div class="header-top">
+    <span class="ward-pill" id="ward-label">Ward</span>
+    <span style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace" id="header-date"></span>
+  </div>
+  <div class="resident-name" id="resident-name-display">Loading…</div>
+  <div class="header-sub" id="header-room"></div>
+</div>
+
+<!-- PIN Gate -->
+<div id="pin-gate">
+  <div>
+    <div class="pin-title">Staff PIN</div>
+    <div class="pin-sub" style="margin-top:6px">Enter PIN to record care observations</div>
+  </div>
+  <div class="pin-display">
+    <div class="pin-dot" id="d0"></div>
+    <div class="pin-dot" id="d1"></div>
+    <div class="pin-dot" id="d2"></div>
+    <div class="pin-dot" id="d3"></div>
+  </div>
+  <div class="pin-pad">
+    <button class="pin-key" onclick="pinPress('1')">1</button>
+    <button class="pin-key" onclick="pinPress('2')">2</button>
+    <button class="pin-key" onclick="pinPress('3')">3</button>
+    <button class="pin-key" onclick="pinPress('4')">4</button>
+    <button class="pin-key" onclick="pinPress('5')">5</button>
+    <button class="pin-key" onclick="pinPress('6')">6</button>
+    <button class="pin-key" onclick="pinPress('7')">7</button>
+    <button class="pin-key" onclick="pinPress('8')">8</button>
+    <button class="pin-key" onclick="pinPress('9')">9</button>
+    <button class="pin-key clear" onclick="pinClear()">CLR</button>
+    <button class="pin-key" onclick="pinPress('0')">0</button>
+    <button class="pin-key del" onclick="pinDel()">⌫</button>
+  </div>
+  <div class="pin-error" id="pin-error"></div>
+</div>
+
+<!-- Main Entry Form -->
+<div id="main-content">
+
+  <!-- ── BOWELS ── -->
+  <div style="height:16px"></div>
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon">🧻</div>
+      <div>
+        <div class="section-title">Bowel Action</div>
+      </div>
+    </div>
+    <div class="section-body">
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-label">Opened Bowels Today</div>
+          <div class="toggle-sub">Toggle on if a bowel action occurred</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="bowels-toggle" onchange="toggleBowels()">
+          <span class="toggle-track"></span>
+        </label>
+      </div>
+      <div id="bristol-section" style="display:none">
+        <div style="font-size:13px;color:var(--muted);margin-top:14px;margin-bottom:8px">Bristol Stool Scale — select type:</div>
+        <div class="bristol-grid" id="bristol-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MEALS ── -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon">🍽️</div>
+      <div>
+        <div class="section-title">Meal &amp; Fluid Intake</div>
+      </div>
+    </div>
+    <div class="section-body">
+      <div class="meal-grid">
+        <div class="meal-row">
+          <div class="meal-label">Breakfast</div>
+          <div class="pct-btns" id="meal-breakfast"></div>
+        </div>
+        <div class="meal-row">
+          <div class="meal-label">Lunch</div>
+          <div class="pct-btns" id="meal-lunch"></div>
+        </div>
+        <div class="meal-row">
+          <div class="meal-label">Dinner</div>
+          <div class="pct-btns" id="meal-dinner"></div>
+        </div>
+      </div>
+      <div class="fluid-row">
+        <div class="fluid-label">Total Fluid Intake</div>
+        <input class="fluid-input" type="number" id="fluid-input" placeholder="0" min="0" max="5000">
+        <span class="fluid-unit">mL</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── BEHAVIOURS ── -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon">⚠️</div>
+      <div>
+        <div class="section-title">Significant Behaviours</div>
+      </div>
+    </div>
+    <div class="section-body">
+      <div class="behaviour-grid" id="behaviour-grid"></div>
+      <textarea class="free-text" id="behaviour-notes" placeholder="Additional notes (optional)…" rows="3"></textarea>
+    </div>
+  </div>
+
+  <!-- Submit -->
+  <div class="submit-wrap">
+    <button class="submit-btn" id="submit-btn" onclick="submitEntry()">Save Observation</button>
+  </div>
+
+  <!-- 24hr History -->
+  <div class="divider"></div>
+  <div class="history-title">Last 24 hrs — Previous Entries</div>
+  <div id="history-list">
+    <div class="history-empty">No entries in the last 24 hours.</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<script>
+// ── CONFIG (inline for single-file deployment) ──
+// Replace these with your Firebase project values:
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBb1uxLSxhW_izFpB_sqZ9k6Qy3gTTQ-dw",
+  authDomain: "caretrack-talleyhaven.firebaseapp.com",
+  databaseURL: "https://caretrack-talleyhaven-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "caretrack-talleyhaven",
+  storageBucket: "caretrack-talleyhaven.firebasestorage.app",
+  messagingSenderId: "769665058120",
+  appId: "1:769665058120:web:8e2035a7f2da4b213e1f7d"
+};
+let pinVal = "";
+const STAFF_PIN = "1234"; // ← change this
+
+const BRISTOL_TYPES = [
+  { type: 1, desc: "Hard lumps" },
+  { type: 2, desc: "Lumpy sausage" },
+  { type: 3, desc: "Cracks on surface" },
+  { type: 4, desc: "Smooth sausage" },
+  { type: 5, desc: "Soft blobs" },
+  { type: 6, desc: "Fluffy, ragged" },
+  { type: 7, desc: "Entirely liquid" }
+];
+
+const BEHAVIOUR_OPTIONS = [
+  "Agitation","Verbal aggression","Physical aggression",
+  "Wandering / exit-seeking","Refusal of care","Refusal of medications",
+  "Sundowning","Emotional distress / tearfulness","Calling out / vocalising",
+  "Sleep disturbance","Social withdrawal","Disinhibition","Repetitive behaviours"
+];
+
+const MEAL_LABELS = ["0%","25%","50%","75%","100%"];
+
+const WARD_COLORS = {
+  Acacia:    { primary: "#2D6A4F", accent: "#52B788" },
+  Jacaranda: { primary: "#5E3A8C", accent: "#9B72CF" },
+  Melaleuca: { primary: "#1A6985", accent: "#48B5D8" },
+  Grevillea: { primary: "#B5451B", accent: "#E07A54" },
+  Banksia:   { primary: "#7A6522", accent: "#C9A84C" }
+};
+
+// ── URL PARAMS ──
+const params  = new URLSearchParams(location.search);
+const ward     = params.get("ward")     || "Acacia";
+const room     = params.get("room")     || "Unknown"; 
+const resId    = params.get("id")       || room; // Use room number as the unique ID
+
+// ── HEADER (Update display to only show Room) ──
+document.getElementById("ward-label").textContent = ward;
+document.getElementById("resident-name-display").textContent = "Room " + room; // Shows "Room 101" instead of "John Smith"
+document.getElementById("header-room").textContent = ""; // Clear this since room is now the main title
+
+// ── APPLY WARD THEME ──
+if (WARD_COLORS[ward]) {
+  document.documentElement.style.setProperty("--ward-primary", WARD_COLORS[ward].primary);
+  document.documentElement.style.setProperty("--ward-accent",  WARD_COLORS[ward].accent);
+}
+
+// ── HEADER DATE ──
+document.getElementById("header-date").textContent = new Date().toLocaleDateString("en-AU",{weekday:"short",day:"numeric",month:"short"});
+
+// ── FIREBASE ──
+firebase.initializeApp(FIREBASE_CONFIG);
+const db = firebase.database();
+
+/**
+ * LONG-TERM HELPERS: 
+ * Ensures clinical audits are easy by grouping data into 
+ * Monday-start weekly folders.
+ */
+function getWeekKey(d = new Date()) {
+  const date = new Date(d);
+  const day = date.getDay();
+  // Adjust to find the most recent Monday
+  const diff = date.getDate() - day + (day === 0 ? -6 : 1); 
+  const monday = new Date(date.setDate(diff));
+  return "week_" + monday.toISOString().split("T")[0];
+}
+
+function getDayKey(d = new Date()) {
+  return d.toISOString().split("T")[0];
+}
+
+// ── PIN GATE ──
+function pinPress(n) {
+  if (pinVal.length >= 4) return;
+  pinVal += n;
+  updatePinDots();
+  if (pinVal.length === 4) setTimeout(checkPin, 200);
+}
+
+function pinDel() { pinVal = pinVal.slice(0,-1); updatePinDots(); }
+function pinClear() { pinVal = ""; updatePinDots(); document.getElementById("pin-error").textContent = ""; }
+function updatePinDots() {
+  [0,1,2,3].forEach(i => {
+    const dot = document.getElementById("d"+i);
+    if(dot) dot.classList.toggle("filled", i < pinVal.length);
+  });
+}
+
+function checkPin() {
+  if (pinVal === STAFF_PIN) {
+    document.getElementById("pin-gate").style.display = "none";
+    document.getElementById("main-content").classList.add("visible");
+    loadHistory();
+  } else {
+    document.getElementById("pin-error").textContent = "Incorrect PIN — try again";
+    pinVal = "";
+    updatePinDots();
+    setTimeout(() => { if(document.getElementById("pin-error")) document.getElementById("pin-error").textContent = ""; }, 2000);
+  }
+}
+
+// ── BUILD BRISTOL GRID ──
+const bristolGrid = document.getElementById("bristol-grid");
+let selectedBristol = null;
+BRISTOL_TYPES.forEach(b => {
+  const btn = document.createElement("button");
+  btn.className = "bristol-btn";
+  btn.innerHTML = `<span class="type-num">${b.type}</span><span class="type-desc">${b.desc}</span>`;
+  btn.onclick = () => {
+    document.querySelectorAll(".bristol-btn").forEach(x => x.classList.remove("selected"));
+    btn.classList.add("selected");
+    selectedBristol = b.type;
+  };
+  bristolGrid.appendChild(btn);
+});
+
+// ── BUILD MEAL BUTTONS ──
+const meals = ["breakfast","lunch","dinner"];
+const mealSelections = { breakfast: null, lunch: null, dinner: null };
+meals.forEach(meal => {
+  const wrap = document.getElementById("meal-" + meal);
+  MEAL_LABELS.forEach(pct => {
+    const btn = document.createElement("button");
+    btn.className = "pct-btn";
+    btn.textContent = pct;
+    btn.onclick = () => {
+      wrap.querySelectorAll(".pct-btn").forEach(x => x.classList.remove("selected"));
+      btn.classList.add("selected");
+      mealSelections[meal] = pct;
+    };
+    wrap.appendChild(btn);
+  });
+});
+
+// ── BUILD BEHAVIOUR GRID ──
+const behaviourGrid = document.getElementById("behaviour-grid");
+const checkedBehaviours = new Set();
+BEHAVIOUR_OPTIONS.forEach(opt => {
+  const item = document.createElement("label");
+  item.className = "behaviour-item";
+  item.innerHTML = `<input type="checkbox"><div class="behaviour-check"></div><span class="behaviour-text">${opt}</span>`;
+  const cb = item.querySelector("input");
+  cb.onchange = () => {
+    item.classList.toggle("checked", cb.checked);
+    if (cb.checked) checkedBehaviours.add(opt); else checkedBehaviours.delete(opt);
+  };
+  behaviourGrid.appendChild(item);
+});
+
+// ── BOWELS TOGGLE ──
+function toggleBowels() {
+  const on = document.getElementById("bowels-toggle").checked;
+  document.getElementById("bristol-section").style.display = on ? "block" : "none";
+  if (!on) { selectedBristol = null; document.querySelectorAll(".bristol-btn").forEach(x => x.classList.remove("selected")); }
+}
+
+// ── SUBMIT ──
+async function submitEntry() {
+  const btn = document.getElementById("submit-btn");
+  btn.disabled = true;
+  btn.textContent = "Saving…";
+
+  const now   = Date.now();
+  // Using Brisbane time to ensure clinical dates are accurate
+  const aest  = new Date(new Date().toLocaleString("en-AU",{timeZone:"Australia/Brisbane"}));
+  
+  const weekKey = getWeekKey(aest);
+  const dayKey  = getDayKey(aest);
+
+  // We are using resId (A1, B3, etc.) instead of names for privacy
+  const entry = {
+    timestamp:    now,
+    resId:        resId,
+    room:         room,
+    ward:         ward,
+    bowels:       document.getElementById("bowels-toggle").checked,
+    bristolType:  selectedBristol,
+    meals:        { ...mealSelections },
+    fluidMl:      parseInt(document.getElementById("fluid-input").value) || 0,
+    behaviours:   [...checkedBehaviours],
+    notes:        document.getElementById("behaviour-notes").value.trim(),
+    date:         dayKey,
+    week:         weekKey
+  };
+
+  // THIS IS THE PATH YOU WERE LOOKING FOR:
+  const path = `wards/${ward}/residents/${resId}/entries/${weekKey}/${dayKey}/${now}`;
+
+  try {
+    // This sends the data to your Firebase structure
+    await db.ref(path).set(entry);
+    showToast("✓ Entry saved to " + weekKey);
+    resetForm();
+    loadHistory();
+  } catch(e) {
+    showToast("⚠ Save failed — check connection");
+    console.error(e);
+  }
+
+  btn.disabled = false;
+  btn.textContent = "Save Observation";
+}
+
+// ── HISTORY (last 24 hrs) ──
+function loadHistory() {
+  const aest    = new Date(new Date().toLocaleString("en-AU",{timeZone:"Australia/Brisbane"}));
+  const weekKey = getWeekKey(aest);
+  const dayKey  = getDayKey(aest);
+  const cutoff  = Date.now() - 24 * 60 * 60 * 1000;
+
+  db.ref(`wards/${ward}/residents/${resId}/entries/${weekKey}/${dayKey}`)
+    .orderByKey()
+    .once("value", snap => {
+      const list = document.getElementById("history-list");
+      const entries = [];
+      snap.forEach(child => {
+        const e = child.val();
+        if (e.timestamp >= cutoff) entries.push(e);
+      });
+      entries.reverse();
+
+      if (!entries.length) {
+        list.innerHTML = '<div class="history-empty">No entries in the last 24 hours.</div>';
+        return;
+      }
+
+      list.innerHTML = entries.map(e => {
+        const chips = [];
+        if (e.bowels) chips.push(`<span class="chip chip-bowels">Bowels ✓${e.bristolType ? " · T"+e.bristolType : ""}</span>`);
+        const mealArr = Object.entries(e.meals||{}).filter(([,v])=>v).map(([k,v])=>`${k[0].toUpperCase()} ${v}`);
+        if (mealArr.length) chips.push(`<span class="chip chip-meal">${mealArr.join(" · ")}</span>`);
+        if (e.fluidMl) chips.push(`<span class="chip chip-meal">💧 ${e.fluidMl}mL</span>`);
+        if ((e.behaviours||[]).length) chips.push(`<span class="chip chip-behav">⚠ ${e.behaviours.length} behaviour${e.behaviours.length>1?"s":""}</span>`);
+
+        return `
+          <div class="entry-card">
+            <div class="entry-meta">
+              <span class="entry-time">${new Date(e.timestamp).toLocaleTimeString("en-AU",{timeZone:"Australia/Brisbane",hour:"2-digit",minute:"2-digit"})}</span>
+            </div>
+            <div class="entry-chips">${chips.join("")||'<span style="font-size:12px;color:var(--muted)">No data recorded</span>'}</div>
+            ${e.notes ? `<div class="entry-notes">"${e.notes}"</div>` : ""}
+          </div>`;
+      }).join("");
+    });
+}
+
+// ── TOAST ──
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 2500);
+}
+</script>
+</body>
+</html>
