@@ -11,6 +11,18 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Mono:wght@400;500&display=swap');
 
+/* ================================================================
+   COLOUR CUSTOMISATION
+   Change the hex values below to adjust the look of the dashboard.
+   --bg        : main page background
+   --card      : card/panel background
+   --border    : divider lines
+   --text      : primary text
+   --muted     : secondary/dim text
+   --danger    : red alerts
+   --warn      : amber warnings
+   --ok        : green positive
+================================================================ */
 :root {
   --bg:     #0B0D0F;
   --card:   #13161A;
@@ -34,22 +46,12 @@ body {
 
 /* ── PIN GATE ── */
 #pin-gate {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  gap: 28px;
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; min-height: 100vh; gap: 28px;
 }
-.pin-logo {
-  font-size: 13px;
-  font-family: 'DM Mono', monospace;
-  letter-spacing: 0.18em;
-  color: var(--muted);
-  text-transform: uppercase;
-}
+.pin-logo { font-size: 13px; font-family: 'DM Mono', monospace; letter-spacing: 0.18em; color: var(--muted); text-transform: uppercase; }
 .pin-title { font-size: 32px; font-weight: 600; letter-spacing: -0.03em; }
-.pin-sub { font-size: 14px; color: var(--muted); }
+.pin-sub   { font-size: 14px; color: var(--muted); }
 .pin-display { display: flex; gap: 14px; }
 .pin-dot { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--muted); transition: all 0.2s; }
 .pin-dot.filled { background: #48B5D8; border-color: #48B5D8; transform: scale(1.2); }
@@ -59,78 +61,49 @@ body {
   color: var(--text); font-family: 'DM Mono', monospace; font-size: 20px;
   font-weight: 500; border-radius: 12px; cursor: pointer; transition: all 0.12s;
 }
-.pin-key:hover { background: #1E2328; }
+.pin-key:hover  { background: #1E2328; }
 .pin-key:active { background: #1A6985; transform: scale(0.96); }
-.pin-key.clear { font-size: 13px; color: var(--muted); }
-.pin-key.del   { font-size: 16px; color: var(--warn); }
+.pin-key.clear  { font-size: 13px; color: var(--muted); }
+.pin-key.del    { font-size: 16px; color: var(--warn); }
 .pin-error { color: var(--danger); font-size: 13px; font-family: 'DM Mono', monospace; min-height: 18px; }
 
-/* ── APP SHELL ── */
+/* ── APP ── */
 #app { display: none; }
 #app.visible { display: block; }
 
 .topbar {
-  background: var(--card);
-  border-bottom: 1px solid var(--border);
-  padding: 0 24px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 56px;
-  position: sticky; top: 0; z-index: 50;
+  background: var(--card); border-bottom: 1px solid var(--border);
+  padding: 0 24px; display: flex; align-items: center;
+  justify-content: space-between; height: 56px;
+  position: sticky; top: 0; z-index: 100;
 }
-.topbar-brand {
-  font-family: 'DM Mono', monospace;
-  font-size: 13px;
-  letter-spacing: 0.12em;
-  color: #48B5D8;
-  text-transform: uppercase;
-}
+.topbar-brand { font-family: 'DM Mono', monospace; font-size: 13px; letter-spacing: 0.12em; color: #48B5D8; text-transform: uppercase; }
 .topbar-right { display: flex; align-items: center; gap: 16px; }
-.topbar-date {
-  font-family: 'DM Mono', monospace;
-  font-size: 12px;
-  color: var(--muted);
-}
+.topbar-date  { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted); }
 .refresh-btn {
-  background: none; border: 1px solid var(--border);
-  color: var(--muted); font-family: 'DM Mono', monospace;
-  font-size: 11px; padding: 6px 12px; border-radius: 8px; cursor: pointer;
-  transition: all 0.15s; letter-spacing: 0.05em;
+  background: none; border: 1px solid var(--border); color: var(--muted);
+  font-family: 'DM Mono', monospace; font-size: 11px; padding: 6px 12px;
+  border-radius: 8px; cursor: pointer; transition: all 0.15s; letter-spacing: 0.05em;
 }
 .refresh-btn:hover { color: var(--text); border-color: #48B5D8; }
 
 /* ── WARD TABS ── */
 .ward-tabs {
-  display: flex;
-  gap: 8px;
-  padding: 16px 24px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  border-bottom: 1px solid var(--border);
-  background: var(--card);
+  display: flex; gap: 8px; padding: 16px 24px;
+  overflow-x: auto; scrollbar-width: none;
+  border-bottom: 1px solid var(--border); background: var(--card);
 }
 .ward-tabs::-webkit-scrollbar { display: none; }
 .ward-tab {
-  padding: 8px 18px;
-  border-radius: 10px;
-  border: 1.5px solid var(--border);
-  background: var(--bg);
-  color: var(--muted);
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.18s;
+  padding: 8px 18px; border-radius: 10px; border: 1.5px solid var(--border);
+  background: var(--bg); color: var(--muted); font-size: 13px; font-weight: 500;
+  cursor: pointer; white-space: nowrap; transition: all 0.18s;
   display: flex; align-items: center; gap: 8px;
 }
 .ward-tab .count-badge {
-  background: rgba(255,255,255,0.06);
-  color: var(--muted);
-  font-family: 'DM Mono', monospace;
-  font-size: 11px;
-  padding: 2px 7px;
-  border-radius: 20px;
+  background: rgba(255,255,255,0.06); color: var(--muted);
+  font-family: 'DM Mono', monospace; font-size: 11px;
+  padding: 2px 7px; border-radius: 20px;
 }
 .ward-tab.active { color: var(--text); background: var(--card); }
 .ward-tab.active .count-badge { color: white; }
@@ -140,115 +113,156 @@ body {
 .ward-tab[data-ward="Grevillea"].active { border-color: #E07A54; }
 .ward-tab[data-ward="Banksia"].active   { border-color: #C9A84C; }
 
-/* ── SUMMARY STATS ── */
+/* ── STATS ── */
 .stats-bar {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  padding: 16px 24px;
-  border-bottom: 1px solid var(--border);
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 12px; padding: 16px 24px; border-bottom: 1px solid var(--border);
 }
-.stat-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 14px 16px;
-}
-.stat-val {
-  font-size: 28px;
-  font-weight: 600;
-  font-family: 'DM Mono', monospace;
-  letter-spacing: -0.02em;
-  line-height: 1;
-}
-.stat-label {
-  font-size: 11px;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  margin-top: 6px;
-  font-family: 'DM Mono', monospace;
-}
-.stat-ok   .stat-val { color: var(--ok); }
-.stat-warn .stat-val { color: var(--warn); }
+.stat-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
+.stat-val  { font-size: 28px; font-weight: 600; font-family: 'DM Mono', monospace; letter-spacing: -0.02em; line-height: 1; }
+.stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 6px; font-family: 'DM Mono', monospace; }
+.stat-ok    .stat-val { color: var(--ok); }
+.stat-warn  .stat-val { color: var(--warn); }
 .stat-danger .stat-val { color: var(--danger); }
-.stat-info .stat-val { color: #48B5D8; }
+.stat-info  .stat-val { color: #48B5D8; }
 
-/* ── RESIDENT TABLE ── */
+/* ── TABLE ── */
 .table-wrap { padding: 16px 24px; overflow-x: auto; }
-.table-header {
-  display: flex; justify-content: space-between; align-items: center;
-  margin-bottom: 14px;
-}
-.table-title { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
+.table-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.table-title  { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
 .export-btn {
-  background: none;
-  border: 1px solid var(--border);
-  color: var(--text);
-  font-family: 'DM Sans', sans-serif;
-  font-size: 13px; font-weight: 500;
-  padding: 8px 16px; border-radius: 10px;
-  cursor: pointer; transition: all 0.15s;
+  background: none; border: 1px solid var(--border); color: var(--text);
+  font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
+  padding: 8px 16px; border-radius: 10px; cursor: pointer; transition: all 0.15s;
   display: flex; align-items: center; gap: 6px;
 }
 .export-btn:hover { background: var(--card); border-color: #48B5D8; color: #48B5D8; }
 
 table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 700px; }
 thead th {
-  padding: 10px 14px;
-  text-align: left;
-  font-family: 'DM Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--muted);
-  border-bottom: 1px solid var(--border);
-  font-weight: 500;
+  padding: 10px 14px; text-align: left; font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--muted); border-bottom: 1px solid var(--border); font-weight: 500;
 }
 tbody tr { border-bottom: 1px solid var(--border); transition: background 0.12s; }
 tbody tr:hover { background: var(--card); }
 tbody tr.no-entry { opacity: 0.5; }
 tbody td { padding: 12px 14px; vertical-align: top; }
+
+/* Clickable room row */
+tbody tr.has-entry { cursor: pointer; }
+tbody tr.has-entry:hover td:first-child { color: #48B5D8; }
+.room-link-hint { font-size: 10px; color: var(--muted); font-family: 'DM Mono', monospace; margin-top: 3px; letter-spacing: 0.04em; }
+
 .resident-cell-name { font-weight: 500; font-size: 14px; }
-.resident-cell-room { font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; margin-top: 2px; }
-
-.status-pill {
-  display: inline-flex; align-items: center; gap: 5px;
-  padding: 4px 10px; border-radius: 20px;
-  font-family: 'DM Mono', monospace;
-  font-size: 11px; font-weight: 500;
-}
+.status-pill { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 20px; font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500; }
 .pill-ok    { background: rgba(82,183,136,0.12);  color: var(--ok); }
-.pill-warn  { background: rgba(212,162,74,0.12);   color: var(--warn); }
 .pill-no    { background: rgba(90,99,112,0.1);     color: var(--muted); }
-.pill-alert { background: rgba(224,82,82,0.12);    color: var(--danger); }
-
-.meal-mini { display: flex; gap: 6px; flex-wrap: wrap; }
-.meal-chip {
-  padding: 3px 8px; border-radius: 6px; font-size: 11px;
-  font-family: 'DM Mono', monospace;
-  background: rgba(255,255,255,0.05); color: var(--muted);
-}
+.meal-mini  { display: flex; gap: 6px; flex-wrap: wrap; }
+.meal-chip  { padding: 3px 8px; border-radius: 6px; font-size: 11px; font-family: 'DM Mono', monospace; background: rgba(255,255,255,0.05); color: var(--muted); }
 .meal-chip.high { color: var(--ok);     background: rgba(82,183,136,0.1); }
 .meal-chip.low  { color: var(--danger); background: rgba(224,82,82,0.1); }
 .meal-chip.mid  { color: var(--warn);   background: rgba(212,162,74,0.1); }
-
 .behav-list { display: flex; flex-wrap: wrap; gap: 4px; }
-.behav-tag {
-  font-size: 10px; padding: 3px 8px; border-radius: 6px;
-  background: rgba(224,82,82,0.1); color: var(--danger);
-  font-family: 'DM Mono', monospace;
-}
+.behav-tag  { font-size: 10px; padding: 3px 8px; border-radius: 6px; background: rgba(224,82,82,0.1); color: var(--danger); font-family: 'DM Mono', monospace; }
 .time-stamp { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); }
-.no-entry-msg { font-size: 12px; color: var(--muted); }
 
-/* ── WEEK VIEW PANEL ── */
+/* ── ROOM DETAIL MODAL ── */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+  z-index: 200; display: none; align-items: flex-start;
+  justify-content: center; padding: 24px 16px; overflow-y: auto;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 18px; width: 100%; max-width: 560px;
+  overflow: hidden; margin: auto;
+}
+.modal-header {
+  padding: 18px 20px; border-bottom: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center;
+  position: sticky; top: 0; background: var(--card); z-index: 10;
+}
+.modal-title { font-size: 18px; font-weight: 600; letter-spacing: -0.02em; }
+.modal-ward-pill {
+  font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.1em;
+  text-transform: uppercase; padding: 4px 10px; border-radius: 20px;
+  background: rgba(72,181,216,0.15); color: #48B5D8;
+}
+.modal-close {
+  background: none; border: 1px solid var(--border); color: var(--muted);
+  width: 32px; height: 32px; border-radius: 8px; cursor: pointer;
+  font-size: 16px; display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s; flex-shrink: 0;
+}
+.modal-close:hover { color: var(--text); border-color: var(--text); }
+.modal-body { padding: 0; }
+
+.modal-date-header {
+  padding: 12px 20px 8px;
+  font-family: 'DM Mono', monospace; font-size: 11px;
+  color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em;
+  border-bottom: 1px solid var(--border);
+}
+
+.entry-block {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.entry-block:last-child { border-bottom: none; }
+.entry-block-time {
+  font-family: 'DM Mono', monospace; font-size: 13px;
+  color: #48B5D8; font-weight: 500; margin-bottom: 12px;
+  display: flex; align-items: center; gap: 8px;
+}
+.entry-block-time::before {
+  content: ''; width: 6px; height: 6px;
+  background: #48B5D8; border-radius: 50%; flex-shrink: 0;
+}
+
+.detail-grid { display: flex; flex-direction: column; gap: 10px; }
+.detail-row  { display: flex; gap: 12px; }
+.detail-label {
+  font-size: 11px; font-family: 'DM Mono', monospace;
+  color: var(--muted); text-transform: uppercase;
+  letter-spacing: 0.08em; width: 72px; flex-shrink: 0; padding-top: 2px;
+}
+.detail-val { font-size: 13px; flex: 1; }
+.detail-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+
+.d-chip {
+  padding: 3px 10px; border-radius: 20px;
+  font-size: 11px; font-weight: 500; font-family: 'DM Mono', monospace;
+}
+.d-chip-ok    { background: rgba(82,183,136,0.12);  color: var(--ok); }
+.d-chip-warn  { background: rgba(212,162,74,0.12);   color: var(--warn); }
+.d-chip-no    { background: rgba(90,99,112,0.1);     color: var(--muted); }
+.d-chip-alert { background: rgba(224,82,82,0.12);    color: var(--danger); }
+.d-chip-fluid { background: rgba(72,181,216,0.12);   color: #48B5D8; }
+
+.detail-notes {
+  margin-top: 4px; font-size: 12px; color: var(--muted);
+  font-style: italic; line-height: 1.5;
+}
+.modal-empty { padding: 40px 20px; text-align: center; color: var(--muted); font-size: 13px; }
+
+.modal-export {
+  padding: 16px 20px; border-top: 1px solid var(--border);
+}
+.modal-export-btn {
+  width: 100%; padding: 12px; border-radius: 10px;
+  border: 1px solid var(--border); background: var(--bg);
+  color: var(--text); font-family: 'DM Sans', sans-serif;
+  font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s;
+}
+.modal-export-btn:hover { border-color: #48B5D8; color: #48B5D8; }
+
+/* ── WEEK PANEL ── */
 .week-panel-toggle {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 14px 24px;
-  border-top: 1px solid var(--border);
-  cursor: pointer;
-  transition: background 0.15s;
+  padding: 14px 24px; border-top: 1px solid var(--border);
+  cursor: pointer; transition: background 0.15s;
 }
 .week-panel-toggle:hover { background: rgba(255,255,255,0.02); }
 .week-panel-label { font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 10px; }
@@ -256,42 +270,22 @@ tbody td { padding: 12px 14px; vertical-align: top; }
 .week-panel-chevron.open { transform: rotate(180deg); }
 .week-panel { display: none; padding: 0 24px 24px; }
 .week-panel.open { display: block; }
-
 .week-selector { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
 .week-btn {
-  padding: 6px 14px; border-radius: 8px;
-  border: 1px solid var(--border); background: var(--card);
-  color: var(--muted); font-family: 'DM Mono', monospace;
+  padding: 6px 14px; border-radius: 8px; border: 1px solid var(--border);
+  background: var(--card); color: var(--muted); font-family: 'DM Mono', monospace;
   font-size: 11px; cursor: pointer; transition: all 0.15s;
 }
 .week-btn.active { border-color: #48B5D8; color: #48B5D8; }
 .week-btn:hover  { color: var(--text); }
 
-.week-resident-block {
-  background: var(--card); border: 1px solid var(--border);
-  border-radius: var(--radius); margin-bottom: 12px; overflow: hidden;
-}
-.week-res-header {
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--border);
-  display: flex; justify-content: space-between; align-items: center;
-}
+.week-resident-block { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 12px; overflow: hidden; }
+.week-res-header { padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
 .week-res-name { font-weight: 500; font-size: 14px; }
-.week-res-room { font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; }
-
-.week-days-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 1px;
-  background: var(--border);
-}
-.week-day-cell { background: var(--card); padding: 10px 8px; min-height: 70px; }
-.week-day-label {
-  font-family: 'DM Mono', monospace;
-  font-size: 10px; color: var(--muted);
-  text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px;
-}
-.week-day-dots { display: flex; flex-direction: column; gap: 3px; }
+.week-days-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: var(--border); }
+.week-day-cell  { background: var(--card); padding: 10px 8px; min-height: 70px; }
+.week-day-label { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+.week-day-dots  { display: flex; flex-direction: column; gap: 3px; }
 .week-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
 .dot-bowel { background: var(--ok); }
 .dot-meal  { background: var(--warn); }
@@ -299,20 +293,14 @@ tbody td { padding: 12px 14px; vertical-align: top; }
 .dot-none  { background: var(--border); }
 .week-dot-count { font-size: 10px; color: var(--muted); font-family: 'DM Mono', monospace; }
 
-.loading-msg {
-  text-align: center; padding: 60px 24px;
-  color: var(--muted); font-family: 'DM Mono', monospace;
-  font-size: 13px; letter-spacing: 0.06em;
-}
+.loading-msg { text-align: center; padding: 60px 24px; color: var(--muted); font-family: 'DM Mono', monospace; font-size: 13px; letter-spacing: 0.06em; }
 
 @media (max-width: 768px) {
   .stats-bar { grid-template-columns: repeat(2, 1fr); }
-  .topbar { padding: 0 16px; }
+  .topbar, .table-wrap, .week-panel { padding-left: 16px; padding-right: 16px; }
   .ward-tabs { padding: 12px 16px; }
-  .table-wrap { padding: 12px 16px; }
-  .week-panel { padding: 0 16px 20px; }
   .week-days-grid { grid-template-columns: repeat(7, minmax(0, 1fr)); }
-  .week-day-cell { padding: 6px 4px; }
+  .week-day-cell  { padding: 6px 4px; }
 }
 </style>
 </head>
@@ -320,16 +308,14 @@ tbody td { padding: 12px 14px; vertical-align: top; }
 
 <!-- PIN GATE -->
 <div id="pin-gate">
-  <div class="pin-logo">CareTrack · Talleyhaven</div>
+  <div class="pin-logo">CareTrack</div>
   <div>
     <div class="pin-title" style="text-align:center">Dashboard Access</div>
     <div class="pin-sub" style="text-align:center;margin-top:6px">Nurses &amp; Senior Staff</div>
   </div>
   <div class="pin-display">
-    <div class="pin-dot" id="d0"></div>
-    <div class="pin-dot" id="d1"></div>
-    <div class="pin-dot" id="d2"></div>
-    <div class="pin-dot" id="d3"></div>
+    <div class="pin-dot" id="d0"></div><div class="pin-dot" id="d1"></div>
+    <div class="pin-dot" id="d2"></div><div class="pin-dot" id="d3"></div>
   </div>
   <div class="pin-pad">
     <button class="pin-key" onclick="pinPress('1')">1</button>
@@ -382,16 +368,13 @@ tbody td { padding: 12px 14px; vertical-align: top; }
   <div class="table-wrap">
     <div class="table-header">
       <div class="table-title" id="table-title">Today's Observations</div>
-      <button class="export-btn" onclick="exportToClipboard()">📋 Copy for Clinical System</button>
+      <button class="export-btn" onclick="exportWard()">📋 Copy Ward Summary</button>
     </div>
     <div id="table-container"><div class="loading-msg">Loading ward data…</div></div>
   </div>
 
   <div class="week-panel-toggle" onclick="toggleWeekPanel()">
-    <div class="week-panel-label">
-      <span>📅</span>
-      <span>Historical View — Weekly Storage</span>
-    </div>
+    <div class="week-panel-label"><span>📅</span><span>Historical View — Weekly Storage</span></div>
     <span class="week-panel-chevron" id="week-chevron">▼</span>
   </div>
   <div class="week-panel" id="week-panel">
@@ -400,19 +383,45 @@ tbody td { padding: 12px 14px; vertical-align: top; }
   </div>
 </div>
 
+<!-- ROOM DETAIL MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModalOnBg(event)">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="modal-title">Room —</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span class="modal-ward-pill" id="modal-ward-pill"></span>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-export">
+      <button class="modal-export-btn" id="modal-export-btn" onclick="exportRoom()">📋 Copy Room Entry for Clinical System</button>
+    </div>
+  </div>
+</div>
+
 <script>
-// ── FIREBASE CONFIG ──
-const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyBb1uxLSxhW_izFpB_sqZ9k6Qy3gTTQ-dw",
-  authDomain: "caretrack-talleyhaven.firebaseapp.com",
-  databaseURL: "https://caretrack-talleyhaven-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "caretrack-talleyhaven",
-  storageBucket: "caretrack-talleyhaven.firebasestorage.app",
-  messagingSenderId: "769665058120",
-  appId: "1:769665058120:web:8e2035a7f2da4b213e1f7d"
+// ════════════════════════════════════════════════
+// FIREBASE CONFIG — replace with your new project values
+// ════════════════════════════════════════════════
+const firebaseConfig = {
+  apiKey: "AIzaSyAAkDnIWux7w07bwY9xs_XsuFd9J7D_hqw",
+  authDomain: "caretrack-28ca3.firebaseapp.com",
+  databaseURL: "https://caretrack-28ca3-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "caretrack-28ca3",
+  storageBucket: "caretrack-28ca3.firebasestorage.app",
+  messagingSenderId: "347899862763",
+  appId: "1:347899862763:web:6387583135eff793d968ae",
+  measurementId: "G-32H4K91589"
 };
 
+// ════════════════════════════════════════════════
+// STAFF PIN — change this before going live
+// ════════════════════════════════════════════════
 const STAFF_PIN = "1234";
+
 const WARDS = ["Acacia","Jacaranda","Melaleuca","Grevillea","Banksia"];
 
 firebase.initializeApp(FIREBASE_CONFIG);
@@ -422,6 +431,7 @@ let activeWard    = "Acacia";
 let wardDataCache = {};
 let weekPanelOpen = false;
 let selectedWeek  = null;
+let modalRoom     = null; // currently open room data
 
 // ── PIN ──
 let pinVal = "";
@@ -445,34 +455,29 @@ function checkPin() {
 
 // ── INIT ──
 function initApp() {
-  document.getElementById("topbar-date").textContent = new Date().toLocaleDateString("en-AU",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+  document.getElementById("topbar-date").textContent =
+    new Date().toLocaleDateString("en-AU",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
   buildWardTabs();
   loadWardData();
 }
 
-// ── DATE HELPERS (Brisbane time) ──
-// FIX: Simple, reliable AEST function — replaces the broken version
 // ── DATE HELPERS (Brisbane = UTC+10, no DST) ──
 function getBrisbaneISOString() {
-  const brisbane = new Date(Date.now() + 10 * 60 * 60 * 1000);
-  return brisbane.toISOString();
+  return new Date(Date.now() + 10 * 60 * 60 * 1000).toISOString();
 }
 function getWeekKey() {
-  const iso = getBrisbaneISOString();
-  const d   = new Date(iso);
+  const d   = new Date(getBrisbaneISOString());
   const day = d.getUTCDay();
-  const diff = day === 0 ? -6 : 1 - day;
-  const monday = new Date(d);
-  monday.setUTCDate(d.getUTCDate() + diff);
-  return "week_" + monday.toISOString().split("T")[0];
+  const mon = new Date(d);
+  mon.setUTCDate(d.getUTCDate() + (day === 0 ? -6 : 1 - day));
+  return "week_" + mon.toISOString().split("T")[0];
 }
 function getDayKey() {
   return getBrisbaneISOString().split("T")[0];
 }
-// kept for legacy calls that pass a date argument
-function getAEST() { return new Date(); }
 
 // ── WARD TABS ──
+// FIX: switching ward now also reloads week panel if it's open
 function buildWardTabs() {
   const wrap = document.getElementById("ward-tabs");
   wrap.innerHTML = "";
@@ -481,7 +486,13 @@ function buildWardTabs() {
     tab.className = "ward-tab" + (w === activeWard ? " active" : "");
     tab.dataset.ward = w;
     tab.innerHTML = `<span>${w}</span><span class="count-badge" id="badge-${w}">—</span>`;
-    tab.onclick = () => { activeWard = w; buildWardTabs(); renderCurrentWard(); };
+    tab.onclick = () => {
+      activeWard = w;
+      buildWardTabs();
+      renderCurrentWard();
+      // FIX: refresh week panel for newly selected ward
+      if (weekPanelOpen && selectedWeek) loadWeekData(selectedWeek);
+    };
     wrap.appendChild(tab);
   });
 }
@@ -502,7 +513,6 @@ async function loadWardData() {
 
     if (data.residents) {
       Object.entries(data.residents).forEach(([resId, resData]) => {
-        // FIX: room is properly stored so table sorts correctly by room number
         const res = {
           id:   resId,
           name: "Room " + (resData.room || resId),
@@ -534,11 +544,10 @@ function renderCurrentWard() {
   const totalEntries = residents.reduce((s, r) => s + (r.entries?.length || 0), 0);
   const bowelCount   = residents.filter(r => r.latestEntry?.bowels).length;
   const lowMeal      = residents.filter(r => {
-    const e = r.latestEntry?.meals;
-    if (!e) return false;
+    const e = r.latestEntry?.meals; if (!e) return false;
     return Object.values(e).filter(Boolean).some(v => ["0%","25%"].includes(v));
   }).length;
-  const behavCount = residents.filter(r => (r.latestEntry?.behaviours || []).length > 0).length;
+  const behavCount = residents.filter(r => (r.latestEntry?.behaviours||[]).length > 0).length;
 
   document.getElementById("stat-entries").textContent    = totalEntries;
   document.getElementById("stat-bowels").textContent     = bowelCount;
@@ -553,11 +562,10 @@ function renderCurrentWard() {
     return;
   }
 
-  // Sort by room number/label
   residents.sort((a, b) => {
     const an = parseInt(a.room) || a.room || "";
     const bn = parseInt(b.room) || b.room || "";
-    if (typeof an === "number" && typeof bn === "number") return an - bn;
+    if (!isNaN(an) && !isNaN(bn)) return an - bn;
     return String(an).localeCompare(String(bn));
   });
 
@@ -571,7 +579,7 @@ function renderCurrentWard() {
     }
 
     const bowelPill = e.bowels
-      ? `<span class="status-pill pill-ok">✓ ${e.bristolType ? "T" + e.bristolType : ""}</span>`
+      ? `<span class="status-pill pill-ok">✓ ${e.bristolType ? "T"+e.bristolType : ""}</span>`
       : `<span class="status-pill pill-no">None</span>`;
 
     const mealHtml = e.meals ? `<div class="meal-mini">${
@@ -583,18 +591,23 @@ function renderCurrentWard() {
     }</div>` : "—";
 
     const fluid = e.fluidMl
-      ? `<span style="font-family:'DM Mono',monospace;font-size:12px;color:${e.fluidMl < 500 ? "var(--danger)" : "var(--ok)"}">${e.fluidMl}mL</span>`
+      ? `<span style="font-family:'DM Mono',monospace;font-size:12px;color:${e.fluidMl<500?"var(--danger)":"var(--ok)"}">${e.fluidMl}mL</span>`
       : "—";
 
-    const behavHtml = (e.behaviours || []).length
-      ? `<div class="behav-list">${e.behaviours.map(b => `<span class="behav-tag">${b}</span>`).join("")}</div>`
+    const behavHtml = (e.behaviours||[]).length
+      ? `<div class="behav-list">${e.behaviours.map(b=>`<span class="behav-tag">${b}</span>`).join("")}</div>`
       : `<span style="font-size:12px;color:var(--muted)">None noted</span>`;
 
-    const timeStr = `<span class="time-stamp">${new Date(e.timestamp).toLocaleTimeString("en-AU",{timeZone:"Australia/Brisbane",hour:"2-digit",minute:"2-digit"})}</span>`;
+    const entryCount = r.entries.length;
+    const timeStr = new Date(e.timestamp).toLocaleTimeString("en-AU",{timeZone:"Australia/Brisbane",hour:"2-digit",minute:"2-digit"});
 
-    return `<tr>
-      <td><div class="resident-cell-name">${r.name}</div></td>
-      <td>${timeStr}</td>
+    // FIX: rows are now clickable — opens room detail modal
+    return `<tr class="has-entry" onclick="openModal('${r.id}')">
+      <td>
+        <div class="resident-cell-name">${r.name}</div>
+        <div class="room-link-hint">${entryCount} entr${entryCount===1?"y":"ies"} today · tap to view all</div>
+      </td>
+      <td><span class="time-stamp">${timeStr}</span></td>
       <td>${bowelPill}</td>
       <td>${mealHtml}</td>
       <td>${fluid}</td>
@@ -604,46 +617,148 @@ function renderCurrentWard() {
 
   document.getElementById("table-container").innerHTML = `
     <table>
-      <thead>
-        <tr>
-          <th>Room</th>
-          <th>Last Entry</th>
-          <th>Bowels</th>
-          <th>Meals (B/L/D)</th>
-          <th>Fluid</th>
-          <th>Behaviours</th>
-        </tr>
-      </thead>
+      <thead><tr>
+        <th>Room</th><th>Last Entry</th><th>Bowels</th>
+        <th>Meals (B/L/D)</th><th>Fluid</th><th>Behaviours</th>
+      </tr></thead>
       <tbody>${rows}</tbody>
     </table>`;
 }
 
-// ── EXPORT TO CLIPBOARD ──
-function exportToClipboard() {
-  const residents = Object.values(wardDataCache[activeWard] || {});
-  const today = new Date().toLocaleDateString("en-AU",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+// ── ROOM DETAIL MODAL ──
+function openModal(resId) {
+  const r = wardDataCache[activeWard]?.[resId];
+  if (!r) return;
+  modalRoom = r;
 
-  let text = `CARETRACK EXPORT — ${activeWard.toUpperCase()} WARD\n${today}\n`;
-  text += "─".repeat(50) + "\n\n";
+  document.getElementById("modal-title").textContent   = r.name;
+  document.getElementById("modal-ward-pill").textContent = activeWard;
 
-  residents.sort((a, b) => {
-    const an = parseInt(a.room) || 0, bn = parseInt(b.room) || 0;
-    return an - bn;
+  const body = document.getElementById("modal-body");
+
+  if (!r.entries.length) {
+    body.innerHTML = '<div class="modal-empty">No entries recorded in the last 24 hours.</div>';
+    document.getElementById("modal-overlay").classList.add("open");
+    return;
+  }
+
+  const today = new Date(getBrisbaneISOString()).toLocaleDateString("en-AU",{weekday:"long",day:"numeric",month:"long"});
+
+  const entriesHtml = r.entries.map(e => {
+    const time = new Date(e.timestamp).toLocaleTimeString("en-AU",{timeZone:"Australia/Brisbane",hour:"2-digit",minute:"2-digit"});
+
+    // Bowels row
+    let bowelVal = '<span class="d-chip d-chip-no">Not recorded</span>';
+    if (e.bowels) {
+      const bristol = e.bristolType ? ` — Bristol Type ${e.bristolType} (${bristolDesc(e.bristolType)})` : "";
+      bowelVal = `<span class="d-chip d-chip-ok">Yes${bristol}</span>`;
+    }
+
+    // Meals row
+    const mealChips = ["breakfast","lunch","dinner"].map(m => {
+      const v = e.meals?.[m]; if (!v) return "";
+      const cls = ["0%","25%"].includes(v) ? "d-chip-alert" : ["75%","100%"].includes(v) ? "d-chip-ok" : "d-chip-warn";
+      return `<span class="d-chip ${cls}">${m[0].toUpperCase()+m.slice(1)} ${v}</span>`;
+    }).join("");
+    const mealsVal = mealChips || '<span class="d-chip d-chip-no">Not recorded</span>';
+
+    // Fluid row
+    const fluidVal = e.fluidMl
+      ? `<span class="d-chip d-chip-fluid">${e.fluidMl} mL</span>`
+      : '<span class="d-chip d-chip-no">Not recorded</span>';
+
+    // Behaviours
+    const behavVal = (e.behaviours||[]).length
+      ? e.behaviours.map(b => `<span class="d-chip d-chip-alert">${b}</span>`).join("")
+      : '<span class="d-chip d-chip-no">None noted</span>';
+
+    return `
+      <div class="entry-block">
+        <div class="entry-block-time">Recorded at ${time}</div>
+        <div class="detail-grid">
+          <div class="detail-row">
+            <div class="detail-label">Bowels</div>
+            <div class="detail-val"><div class="detail-chips">${bowelVal}</div></div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">Meals</div>
+            <div class="detail-val"><div class="detail-chips">${mealsVal}</div></div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">Fluids</div>
+            <div class="detail-val"><div class="detail-chips">${fluidVal}</div></div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">Behaviour</div>
+            <div class="detail-val"><div class="detail-chips">${behavVal}</div></div>
+          </div>
+          ${e.notes ? `<div class="detail-row">
+            <div class="detail-label">Notes</div>
+            <div class="detail-val"><div class="detail-notes">"${e.notes}"</div></div>
+          </div>` : ""}
+        </div>
+      </div>`;
+  }).join("");
+
+  body.innerHTML = `
+    <div class="modal-date-header">All entries — ${today}</div>
+    ${entriesHtml}`;
+
+  document.getElementById("modal-overlay").classList.add("open");
+}
+
+function closeModal() {
+  document.getElementById("modal-overlay").classList.remove("open");
+  modalRoom = null;
+}
+function closeModalOnBg(e) {
+  if (e.target === document.getElementById("modal-overlay")) closeModal();
+}
+
+// ── ROOM EXPORT ──
+function exportRoom() {
+  if (!modalRoom) return;
+  const r     = modalRoom;
+  const today = new Date(getBrisbaneISOString()).toLocaleDateString("en-AU",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+
+  let text = `CARETRACK — ${activeWard.toUpperCase()} WARD\n${r.name}\n${today}\n`;
+  text += "─".repeat(40) + "\n\n";
+
+  r.entries.forEach(e => {
+    const t = new Date(e.timestamp).toLocaleTimeString("en-AU",{timeZone:"Australia/Brisbane",hour:"2-digit",minute:"2-digit"});
+    text += `Recorded: ${t}\n`;
+    text += e.bowels
+      ? `Bowels: Yes${e.bristolType ? " — Bristol Type "+e.bristolType+" ("+bristolDesc(e.bristolType)+")" : ""}\n`
+      : `Bowels: Not recorded\n`;
+    if (e.meals) text += `Meals: Breakfast ${e.meals.breakfast||"—"} / Lunch ${e.meals.lunch||"—"} / Dinner ${e.meals.dinner||"—"}\n`;
+    if (e.fluidMl) text += `Fluids: ${e.fluidMl}mL\n`;
+    if ((e.behaviours||[]).length) text += `Behaviours: ${e.behaviours.join(", ")}\n`;
+    if (e.notes) text += `Notes: ${e.notes}\n`;
+    text += "\n";
   });
 
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById("modal-export-btn");
+    btn.textContent = "✓ Copied!";
+    setTimeout(() => btn.textContent = "📋 Copy Room Entry for Clinical System", 2000);
+  });
+}
+
+// ── WARD EXPORT ──
+function exportWard() {
+  const residents = Object.values(wardDataCache[activeWard] || {});
+  const today = new Date().toLocaleDateString("en-AU",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+  let text = `CARETRACK EXPORT — ${activeWard.toUpperCase()} WARD\n${today}\n` + "─".repeat(50) + "\n\n";
+
+  residents.sort((a,b) => (parseInt(a.room)||0) - (parseInt(b.room)||0));
   residents.forEach(r => {
     const e = r.latestEntry;
     text += `▸ ${r.name}\n`;
     if (!e) { text += "  No entry recorded in last 24 hours.\n\n"; return; }
     const t = new Date(e.timestamp).toLocaleTimeString("en-AU",{timeZone:"Australia/Brisbane",hour:"2-digit",minute:"2-digit"});
     text += `  Recorded: ${t}\n`;
-    text += e.bowels
-      ? `  Bowels: Yes${e.bristolType ? " — Bristol Type " + e.bristolType + " (" + bristolDesc(e.bristolType) + ")" : ""}\n`
-      : `  Bowels: Not recorded\n`;
-    if (e.meals) {
-      const m = e.meals;
-      text += `  Meals: Breakfast ${m.breakfast||"—"} / Lunch ${m.lunch||"—"} / Dinner ${m.dinner||"—"}\n`;
-    }
+    text += e.bowels ? `  Bowels: Yes${e.bristolType?" — Bristol Type "+e.bristolType+" ("+bristolDesc(e.bristolType)+")":""}\n` : `  Bowels: Not recorded\n`;
+    if (e.meals) text += `  Meals: Breakfast ${e.meals.breakfast||"—"} / Lunch ${e.meals.lunch||"—"} / Dinner ${e.meals.dinner||"—"}\n`;
     if (e.fluidMl) text += `  Fluids: ${e.fluidMl}mL\n`;
     if ((e.behaviours||[]).length) text += `  Behaviours: ${e.behaviours.join(", ")}\n`;
     if (e.notes) text += `  Notes: ${e.notes}\n`;
@@ -653,13 +768,12 @@ function exportToClipboard() {
   navigator.clipboard.writeText(text).then(() => {
     const btn = document.querySelector(".export-btn");
     btn.textContent = "✓ Copied!";
-    setTimeout(() => btn.innerHTML = "📋 Copy for Clinical System", 2000);
+    setTimeout(() => btn.innerHTML = "📋 Copy Ward Summary", 2000);
   });
 }
 
 function bristolDesc(t) {
-  const d = ["","Hard lumps","Lumpy sausage","Cracks on surface","Smooth sausage","Soft blobs","Fluffy/ragged","Liquid"];
-  return d[t] || "";
+  return ["","Hard lumps","Lumpy sausage","Cracks on surface","Smooth sausage","Soft blobs","Fluffy/ragged","Liquid"][t] || "";
 }
 
 // ── WEEK PANEL ──
@@ -671,24 +785,17 @@ function toggleWeekPanel() {
 }
 
 function buildWeekSelector() {
-  const wrap = document.getElementById("week-selector");
-  wrap.innerHTML = "";
-
-  // Base from Brisbane "now" as a plain UTC date offset by +10h
+  const wrap        = document.getElementById("week-selector");
+  wrap.innerHTML    = "";
   const nowBrisbane = new Date(Date.now() + 10 * 60 * 60 * 1000);
 
   for (let i = 0; i < 8; i++) {
-    // Go back i weeks from today
-    const d = new Date(nowBrisbane);
+    const d   = new Date(nowBrisbane);
     d.setUTCDate(d.getUTCDate() - i * 7);
-
-    // Find Monday of that week
     const dow  = d.getUTCDay();
-    const diff = dow === 0 ? -6 : 1 - dow;
-    const mon  = new Date(d); mon.setUTCDate(d.getUTCDate() + diff);
+    const mon  = new Date(d); mon.setUTCDate(d.getUTCDate() + (dow===0?-6:1-dow));
     const sun  = new Date(mon); sun.setUTCDate(mon.getUTCDate() + 6);
-
-    const wk    = "week_" + mon.toISOString().split("T")[0];
+    const wk   = "week_" + mon.toISOString().split("T")[0];
     const label = `${mon.getUTCDate()}/${mon.getUTCMonth()+1} – ${sun.getUTCDate()}/${sun.getUTCMonth()+1}`;
 
     const btn = document.createElement("button");
@@ -717,8 +824,8 @@ async function loadWeekData(weekKey) {
   }
 
   const monDate = new Date(weekKey.replace("week_",""));
-  const days = Array.from({length: 7}, (_, i) => {
-    const d = new Date(monDate); d.setDate(d.getDate() + i);
+  const days = Array.from({length:7},(_,i) => {
+    const d = new Date(monDate); d.setUTCDate(d.getUTCDate()+i);
     return { key: d.toISOString().split("T")[0], label: d.toLocaleDateString("en-AU",{weekday:"short",day:"numeric"}) };
   });
 
@@ -727,40 +834,33 @@ async function loadWeekData(weekKey) {
     const weekData = resData.entries?.[weekKey] || {};
 
     const dayCells = days.map(day => {
-      const entries = Object.values(weekData[day.key] || {});
-      if (!entries.length) {
-        return `<div class="week-day-cell">
-          <div class="week-day-label">${day.label}</div>
-          <span class="week-dot dot-none" style="width:100%;height:3px;border-radius:2px;display:block"></span>
-        </div>`;
-      }
-      const latest      = entries.sort((a, b) => b.timestamp - a.timestamp)[0];
-      const hasBowel    = latest.bowels;
-      const hasLowMeal  = Object.values(latest.meals || {}).some(v => ["0%","25%"].includes(v));
-      const hasBehav    = (latest.behaviours || []).length > 0;
+      const entries = Object.values(weekData[day.key]||{});
+      if (!entries.length) return `<div class="week-day-cell"><div class="week-day-label">${day.label}</div><span class="week-dot dot-none" style="width:100%;height:3px;border-radius:2px;display:block"></span></div>`;
+      const latest     = entries.sort((a,b)=>b.timestamp-a.timestamp)[0];
+      const hasBowel   = latest.bowels;
+      const hasLowMeal = Object.values(latest.meals||{}).some(v=>["0%","25%"].includes(v));
+      const hasBehav   = (latest.behaviours||[]).length > 0;
       return `<div class="week-day-cell">
         <div class="week-day-label">${day.label}</div>
         <div class="week-day-dots">
-          ${hasBowel  ? '<span class="week-dot dot-bowel" title="Bowels recorded"></span>' : ""}
-          ${hasLowMeal? '<span class="week-dot dot-meal"  title="Low intake"></span>'      : ""}
-          ${hasBehav  ? '<span class="week-dot dot-behav" title="Behaviour noted"></span>' : ""}
-          <span class="week-dot-count">${entries.length} entr${entries.length === 1 ? "y" : "ies"}</span>
+          ${hasBowel  ?'<span class="week-dot dot-bowel" title="Bowels recorded"></span>':""}
+          ${hasLowMeal?'<span class="week-dot dot-meal"  title="Low intake"></span>':""}
+          ${hasBehav  ?'<span class="week-dot dot-behav" title="Behaviour noted"></span>':""}
+          <span class="week-dot-count">${entries.length} entr${entries.length===1?"y":"ies"}</span>
         </div>
       </div>`;
     }).join("");
 
     return `<div class="week-resident-block">
-      <div class="week-res-header">
-        <div class="week-res-name">Room ${room}</div>
-      </div>
+      <div class="week-res-header"><div class="week-res-name">Room ${room}</div></div>
       <div class="week-days-grid">${dayCells}</div>
     </div>`;
   }).join("");
 
   const legend = `<div style="display:flex;gap:16px;margin-bottom:14px;font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;flex-wrap:wrap">
-    <span><span class="week-dot dot-bowel" style="display:inline-block;vertical-align:middle;margin-right:5px"></span>Bowels recorded</span>
-    <span><span class="week-dot dot-meal"  style="display:inline-block;vertical-align:middle;margin-right:5px"></span>Low intake (&lt;50%)</span>
-    <span><span class="week-dot dot-behav" style="display:inline-block;vertical-align:middle;margin-right:5px"></span>Behaviour noted</span>
+    <span><span class="week-dot dot-bowel" style="display:inline-block;vertical-align:middle;margin-right:5px"></span>Bowels</span>
+    <span><span class="week-dot dot-meal"  style="display:inline-block;vertical-align:middle;margin-right:5px"></span>Low intake</span>
+    <span><span class="week-dot dot-behav" style="display:inline-block;vertical-align:middle;margin-right:5px"></span>Behaviour</span>
   </div>`;
 
   document.getElementById("week-content").innerHTML = legend + (html || '<div class="loading-msg">No data for this week.</div>');
