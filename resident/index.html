@@ -473,23 +473,41 @@ BRISTOL_TYPES.forEach(b => {
 });
 
 // ── MEAL BUTTONS ──
-const meals = ["breakfast","lunch","dinner"];
+const meals = ["breakfast", "lunch", "dinner"];
 const mealSelections = { breakfast: null, lunch: null, dinner: null };
+
 meals.forEach(meal => {
   const wrap = document.getElementById("meal-" + meal);
-  ["0%","25%","50%","75%","100%"].forEach(pct => {
+  
+  // SAFETY CHECK: If the element doesn't exist on the page, don't run the code
+  if (!wrap) return; 
+
+  ["0%", "25%", "50%", "75%", "100%"].forEach(pct => {
     const btn = document.createElement("button");
     btn.className = "pct-btn";
     btn.textContent = pct;
+    
     btn.onclick = () => {
+      // 1. Store the current state before we clear anything
+      const wasAlreadySelected = btn.classList.contains("selected");
+
+      // 2. Clear 'selected' from all buttons in this specific meal row
       wrap.querySelectorAll(".pct-btn").forEach(x => x.classList.remove("selected"));
-      btn.classList.add("selected");
-      mealSelections[meal] = pct;
+
+      // 3. Toggle logic
+      if (wasAlreadySelected) {
+        mealSelections[meal] = null; // Unset the data
+        // We leave the button unselected (already cleared in step 2)
+      } else {
+        btn.classList.add("selected"); // Highlight this button
+        mealSelections[meal] = pct;    // Save the data
+      }
     };
+    
     wrap.appendChild(btn);
   });
 });
-
+  
 // ── BEHAVIOUR CHECKBOXES ──
 const checkedBehaviours = new Set();
 BEHAVIOUR_OPTIONS.forEach(opt => {
