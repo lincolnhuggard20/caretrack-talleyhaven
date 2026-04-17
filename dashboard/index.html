@@ -259,6 +259,14 @@ tbody tr.has-entry:hover td:first-child { color: #48B5D8; }
 .modal-export-btn:hover { border-color: #48B5D8; color: #48B5D8; }
 
 /* ── WEEK PANEL ── */
+   /* Add to existing styles */
+.week-day-cell {
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.week-day-cell:hover {
+  background: rgba(72, 181, 216, 0.08);
+}
 .week-panel-toggle {
   display: flex; align-items: center; justify-content: space-between;
   padding: 14px 24px; border-top: 1px solid var(--border);
@@ -426,6 +434,7 @@ const WARDS = ["Acacia","Jacaranda","Melaleuca","Grevillea","Banksia"];
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
+let Historicalcache = {};
 let activeWard    = "Acacia";
 let wardDataCache = {};
 let weekPanelOpen = false;
@@ -742,7 +751,66 @@ function exportRoom() {
     setTimeout(() => btn.textContent = "📋 Copy Room Entry for Clinical System", 2000);
   });
 }
+/* ... existing exportRoom function ... */
 
+// ── HISTORICAL MODAL HANDLER ──
+function openHistoricalModal(resId, weekKey, dayKey) {
+  const resData = historicalCache.residents?.[resId];
+  if (!resData) return;
+
+  // Filter and sort entries for that specific day
+  const entries = Object.values(resData.entries?.[weekKey]?.[dayKey] || {})
+    .sort((a,b) => b.timestamp - a.timestamp);
+  
+  // Update the global modalRoom so the 'Copy' button still works
+  modalRoom = {
+    id: resId,
+    name: "Room " + (resData.room || resId),
+    entries: entries
+  };
+
+  document.getElementById("modal-title").textContent = modalRoom.name;
+  document.getElementById("modal-ward-pill").textContent = activeWard + " (Archive)";
+
+  const dateLabel = new Date(dayKey).toLocaleDateString("en-AU", { 
+    weekday: 'long', 
+    day: 'numeric', 
+    month: 'long' 
+  });
+  
+  const body = document.getElementById("modal-body");
+
+  // Map historical data to the modal UI
+  const entriesHtml = entries.map(e => {
+    const time = new Date(e.timestamp).toLocaleTimeString("en-AU", { 
+        hour: "2-digit", 
+        minute: "2-digit" 
+    });
+    
+    const bowelVal = e.bowels 
+      ? `<span class="d-chip d-chip-ok">Yes — ${e.bristolType ? "Bristol "+e.bristolType : "Recorded"}</span>` 
+      : '<span class="d-chip d-chip-no">None</span>';
+      
+    const mealChips = ["breakfast","lunch","dinner"].map(m => {
+      const v = e.meals?.[m]; if (!v) return "";
+      const cls = ["0%","25%"].includes(v) ? "d-chip-alert" : ["75%","100%"].includes(v) ? "d-chip-ok" : "d-chip-warn";
+      return `<span class="d-chip ${cls}">${m[0].toUpperCase()+m.slice(1)} ${v}</span>`;
+    }).join("");
+
+    return `
+      <div class="entry-block">
+        <div class="entry-block-time">Recorded at ${time}</div>
+        <div class="detail-grid">
+          <div class="detail-row"><div class="detail-label">Bowels</div><div class="detail-val">${bowelVal}</div></div>
+          <div class="detail-row"><div class="detail-label">Meals</div><div class="detail-val"><div class="detail-chips">${mealChips || '—'}</div></div></div>
+          ${e.notes ? `<div class="detail-row"><div class="detail-label">Notes</div><div class="detail-val"><div class="detail-notes">"${e.notes}"</div></div></div>` : ""}
+        </div>
+      </div>`;
+  }).join("");
+
+  body.innerHTML = `<div class="modal-date-header">${dateLabel}</div>${entriesHtml}`;
+  document.getElementById("modal-overlay").classList.add("open");
+}
 // ── WARD EXPORT ──
 function exportWard() {
   const residents = Object.values(wardDataCache[activeWard] || {});
@@ -814,11 +882,14 @@ function buildWeekSelector() {
 
 async function loadWeekData(weekKey) {
   document.getElementById("week-content").innerHTML = '<div class="loading-msg">Loading week…</div>';
+  
+  // Fetch data
   const snap = await db.ref(`wards/${activeWard}`).once("value");
-  const data  = snap.val() || {};
+  const data = snap.val() || {};
+  historicalCache = data; // Cache for the modal to use
 
   if (!data.residents) {
-    document.getElementById("week-content").innerHTML = '<div class="loading-msg">No data recorded yet for this ward.</div>';
+    document.getElementById("week-content").innerHTML = '<div class="loading-msg">No data recorded yet.</div>';
     return;
   }
 
@@ -829,38 +900,51 @@ async function loadWeekData(weekKey) {
   });
 
   const html = Object.entries(data.residents).map(([resId, resData]) => {
-    const room     = resData.room || resId;
+    const room = resData.room || resId;
     const weekData = resData.entries?.[weekKey] || {};
 
     const dayCells = days.map(day => {
       const entries = Object.values(weekData[day.key]||{});
-      if (!entries.length) return `<div class="week-day-cell"><div class="week-day-label">${day.label}</div><span class="week-dot dot-none" style="width:100%;height:3px;border-radius:2px;display:block"></span></div>`;
-      const latest     = entries.sort((a,b)=>b.timestamp-a.timestamp)[0];
-      const hasBowel   = latest.bowels;
-      const hasLowMeal = Object.values(latest.meals||{}).some(v=>["0%","25%"].includes(v));
-      const hasBehav   = (latest.behaviours||[]).length > 0;
-      return `<div class="week-day-cell">
-        <div class="week-day-label">${day.label}</div>
-        <div class="week-day-dots">
-          ${hasBowel  ?'<span class="week-dot dot-bowel" title="Bowels recorded"></span>':""}
-          ${hasLowMeal?'<span class="week-dot dot-meal"  title="Low intake"></span>':""}
-          ${hasBehav  ?'<span class="week-dot dot-behav" title="Behaviour noted"></span>':""}
-          <span class="week-dot-count">${entries.length} entr${entries.length===1?"y":"ies"}</span>
-        </div>
-      </div>`;
+      
+      if (!entries.length) {
+        return `<div class="week-day-cell" style="opacity:0.4">
+                  <div class="week-day-label">${day.label}</div>
+                  <span class="week-dot dot-none" style="width:100%;height:3px;border-radius:2px;display:block"></span>
+                </div>`;
+      }
+
+      const latest = entries.sort((a,b) => b.timestamp - a.timestamp)[0];
+      const hasBowel = latest.bowels;
+      const hasLowMeal = Object.values(latest.meals||{}).some(v => ["0%","25%"].includes(v));
+      const hasBehav = (latest.behaviours||[]).length > 0;
+
+      // ADDED: onclick handler to open the historical entries
+      return `
+        <div class="week-day-cell" onclick="openHistoricalModal('${resId}', '${weekKey}', '${day.key}')">
+          <div class="week-day-label">${day.label}</div>
+          <div class="week-day-dots">
+            ${hasBowel ? '<span class="week-dot dot-bowel"></span>' : ""}
+            ${hasLowMeal ? '<span class="week-dot dot-meal"></span>' : ""}
+            ${hasBehav ? '<span class="week-dot dot-behav"></span>' : ""}
+            <span class="week-dot-count">${entries.length} entr${entries.length===1?"y":"ies"}</span>
+          </div>
+        </div>`;
     }).join("");
 
-    return `<div class="week-resident-block">
-      <div class="week-res-header"><div class="week-res-name">Room ${room}</div></div>
-      <div class="week-days-grid">${dayCells}</div>
-    </div>`;
+    return `
+      <div class="week-resident-block">
+        <div class="week-res-header"><div class="week-res-name">Room ${room}</div></div>
+        <div class="week-days-grid">${dayCells}</div>
+      </div>`;
   }).join("");
 
-  const legend = `<div style="display:flex;gap:16px;margin-bottom:14px;font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;flex-wrap:wrap">
-    <span><span class="week-dot dot-bowel" style="display:inline-block;vertical-align:middle;margin-right:5px"></span>Bowels</span>
-    <span><span class="week-dot dot-meal"  style="display:inline-block;vertical-align:middle;margin-right:5px"></span>Low intake</span>
-    <span><span class="week-dot dot-behav" style="display:inline-block;vertical-align:middle;margin-right:5px"></span>Behaviour</span>
-  </div>`;
+  const legend = `
+    <div style="display:flex;gap:16px;margin-bottom:14px;font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;flex-wrap:wrap">
+      <span><span class="week-dot dot-bowel" style="display:inline-block;vertical-align:middle;margin-right:5px"></span>Bowels</span>
+      <span><span class="week-dot dot-meal"  style="display:inline-block;vertical-align:middle;margin-right:5px"></span>Low intake</span>
+      <span><span class="week-dot dot-behav" style="display:inline-block;vertical-align:middle;margin-right:5px"></span>Behaviour</span>
+      <span style="margin-left:auto">Click any day to see clinical notes</span>
+    </div>`;
 
   document.getElementById("week-content").innerHTML = legend + (html || '<div class="loading-msg">No data for this week.</div>');
 }
