@@ -481,14 +481,22 @@ meals.forEach(meal => {
     const btn = document.createElement("button");
     btn.className = "pct-btn";
     btn.textContent = pct;
-    btn.onclick = () => {
-      wrap.querySelectorAll(".pct-btn").forEach(x => x.classList.remove("selected"));
-      btn.classList.add("selected");
-      mealSelections[meal] = pct;
-    };
-    wrap.appendChild(btn);
-  });
-});
+btn.onclick = () => {
+  // 1. Check if this specific button is already the active one
+  const isAlreadySelected = btn.classList.contains("selected");
+
+  // 2. Clear 'selected' styling from all buttons in this row (the usual behavior)
+  wrap.querySelectorAll(".pct-btn").forEach(x => x.classList.remove("selected"));
+
+  if (isAlreadySelected) {
+    // 3. If it was already selected, leave it unselected and clear the data
+    mealSelections[meal] = null;
+  } else {
+    // 4. If it wasn't selected, mark it as active and save the value
+    btn.classList.add("selected");
+    mealSelections[meal] = pct;
+  }
+};
 
 // ── BEHAVIOUR CHECKBOXES ──
 const checkedBehaviours = new Set();
