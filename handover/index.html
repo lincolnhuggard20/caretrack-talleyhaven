@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>CareTrack — Handover Entry</title>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+
+/* ================================================================
+   COLOUR CUSTOMISATION — match these to your other CareTrack pages
+   --bg        : main page background
+   --card      : card/panel background
+   --border    : divider lines
+================================================================ */
+:root {
+  --ward-primary: #2D6A4F;
+  --ward-accent:  #52B788;
+  --bg:     #0F1410;
+  --card:   #161D17;
+  --border: #1E2B1F;
+  --text:   #E8F0E9;
+  --muted:  #6B8C6D;
+  --danger: #E05252;
+  --warn:   #D4A24A;
+  --ok:     #52B788;
+  --radius: 14px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100dvh;
+  padding-bottom: 100px;
+}
+
+/* ── PIN GATE ── */
+#pin-gate {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; min-height: 100dvh; padding: 40px 24px; gap: 24px;
+}
+.pin-title { font-size: 28px; font-weight: 600; text-align: center; letter-spacing: -0.03em; }
+.pin-sub   { font-size: 14px; color: var(--muted); text-align: center; }
+.pin-ward-badge {
+  font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 0.14em;
+  text-transform: uppercase; padding: 6px 16px; border-radius: 20px;
+  background: var(--ward-primary); color: var(--ward-accent);
+}
+.pin-display { display: flex; gap: 12px; justify-content: center; }
+.pin-dot {
+  width: 18px; height: 18px; border-radius: 50%;
+  border: 2px solid var(--muted); transition: all 0.2s;
+}
+.pin-dot.filled { background: var(--ward-accent); border-color: var(--ward-accent); transform: scale(1.15); }
+.pin-pad { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; width: 100%; max-width: 280px; }
+.pin-key {
+  aspect-ratio: 1; border: 1px solid var(--border); background: var(--card);
+  color: var(--text); font-family: 'DM Mono', monospace; font-size: 22px;
+  font-weight: 500; border-radius: var(--radius); cursor: pointer;
+  transition: all 0.12s; display: flex; align-items: center; justify-content: center;
+}
+.pin-key:active { background: var(--ward-primary); transform: scale(0.96); }
+.pin-key.clear { font-size: 14px; color: var(--muted); }
+.pin-key.del   { font-size: 18px; color: var(--warn); }
+.pin-error { color: var(--danger); font-size: 13px; text-align: center; min-height: 18px; font-family: 'DM Mono', monospace; }
+
+/* ── HEADER ── */
+#main-content { display: none; }
+#main-content.visible { display: block; }
+
+.header {
+  background: var(--card); border-bottom: 1px solid var(--border);
+  padding: 14px 20px; position: sticky; top: 0; z-index: 50;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+}
+.header-left { display: flex; flex-direction: column; gap: 3px; }
+.header-ward {
+  font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.12em;
+  text-transform: uppercase; padding: 3px 10px; border-radius: 20px;
+  background: var(--ward-primary); color: var(--ward-accent);
+  display: inline-block; width: fit-content;
+}
+.header-title { font-size: 18px; font-weight: 600; letter-spacing: -0.02em; }
+.header-sub   { font-size: 12px; color: var(--muted); font-family: 'DM Mono', monospace; }
+.header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.progress-label { font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; }
+.progress-bar-wrap { width: 80px; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.progress-bar-fill { height: 100%; background: var(--ward-accent); border-radius: 2px; transition: width 0.3s; }
+
+/* ── ROOM CARDS ── */
+.rooms-list { padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; }
+
+.room-card {
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+.room-card.has-data    { border-color: rgba(82,183,136,0.4); }
+.room-card.is-expanded { border-color: var(--ward-accent); }
+
+.room-card-header {
+  padding: 14px 16px;
+  display: flex; align-items: center; justify-content: space-between;
+  cursor: pointer; user-select: none;
+  gap: 12px;
+}
+.room-card-header:active { background: rgba(255,255,255,0.03); }
+
+.room-number {
+  font-size: 16px; font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.room-status-row {
+  display: flex; align-items: center; gap: 8px; flex: 1;
+}
+.room-summary-chips {
+  display: flex; gap: 5px; flex-wrap: wrap; flex: 1;
+}
+.sum-chip {
+  font-family: 'DM Mono', monospace; font-size: 10px; font-weight: 500;
+  padding: 3px 8px; border-radius: 10px;
+}
+.sum-chip-ok    { background: rgba(82,183,136,0.15); color: var(--ok); }
+.sum-chip-warn  { background: rgba(212,162,74,0.15);  color: var(--warn); }
+.sum-chip-alert { background: rgba(224,82,82,0.15);   color: var(--danger); }
+.sum-chip-muted { background: rgba(107,140,109,0.1);  color: var(--muted); }
+
+.room-chevron {
+  font-size: 12px; color: var(--muted); transition: transform 0.2s; flex-shrink: 0;
+}
+.room-card.is-expanded .room-chevron { transform: rotate(180deg); }
+
+/* ── ROOM FORM (collapsible) ── */
+.room-form {
+  display: none;
+  padding: 0 16px 16px;
+  border-top: 1px solid var(--border);
+  padding-top: 16px;
+}
+.room-card.is-expanded .room-form { display: block; }
+
+/* Toggle */
+.form-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.form-label { font-size: 14px; font-weight: 500; }
+.form-sub   { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.toggle-switch { position: relative; width: 52px; height: 28px; flex-shrink: 0; }
+.toggle-switch input { display: none; }
+.toggle-track {
+  position: absolute; inset: 0; background: var(--border);
+  border-radius: 14px; cursor: pointer; transition: background 0.2s;
+}
+.toggle-track::after {
+  content: ''; position: absolute; left: 3px; top: 3px;
+  width: 22px; height: 22px; background: white;
+  border-radius: 50%; transition: transform 0.2s;
+}
+.toggle-switch input:checked ~ .toggle-track { background: var(--ward-accent); }
+.toggle-switch input:checked ~ .toggle-track::after { transform: translateX(24px); }
+
+/* Bristol */
+.bristol-wrap { margin-bottom: 14px; }
+.form-section-label {
+  font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace;
+  text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;
+}
+.bristol-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; }
+.bristol-btn {
+  background: var(--bg); border: 1.5px solid var(--border);
+  border-radius: 10px; padding: 8px 4px; cursor: pointer;
+  text-align: center; transition: all 0.15s; color: var(--text);
+}
+.bristol-btn .type-num { font-family: 'DM Mono', monospace; font-size: 16px; font-weight: 500; display: block; color: var(--ward-accent); }
+.bristol-btn .type-desc { font-size: 9px; color: var(--muted); display: block; margin-top: 2px; line-height: 1.3; }
+.bristol-btn.selected { border-color: var(--ward-accent); background: rgba(82,183,136,0.1); }
+.bristol-btn:active { transform: scale(0.96); }
+
+/* Meals */
+.meals-wrap { margin-bottom: 14px; }
+.meal-row   { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.meal-label {
+  font-size: 11px; font-weight: 500; width: 68px; flex-shrink: 0;
+  color: var(--muted); font-family: 'DM Mono', monospace;
+  text-transform: uppercase; letter-spacing: 0.06em;
+}
+.pct-btns { display: flex; gap: 5px; flex: 1; }
+.pct-btn {
+  flex: 1; padding: 7px 2px; border: 1.5px solid var(--border);
+  background: var(--bg); border-radius: 8px; color: var(--muted);
+  font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500;
+  cursor: pointer; text-align: center; transition: all 0.15s;
+}
+.pct-btn.selected { border-color: var(--ward-accent); background: rgba(82,183,136,0.1); color: var(--ward-accent); }
+.pct-btn:active { transform: scale(0.96); }
+
+/* Fluid */
+.fluid-row {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 14px; padding-top: 10px; border-top: 1px solid var(--border);
+}
+.fluid-label { font-size: 13px; font-weight: 500; flex: 1; }
+.fluid-input {
+  background: var(--bg); border: 1.5px solid var(--border);
+  border-radius: 10px; padding: 9px 12px; color: var(--text);
+  font-family: 'DM Mono', monospace; font-size: 15px; width: 100px; text-align: center;
+}
+.fluid-input:focus { outline: none; border-color: var(--ward-accent); }
+.fluid-unit { font-size: 12px; color: var(--muted); font-family: 'DM Mono', monospace; }
+
+/* Behaviours */
+.behav-wrap   { margin-bottom: 14px; }
+.behav-grid   { display: flex; flex-direction: column; gap: 3px; margin-bottom: 8px; }
+.behav-item   {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 10px; border-radius: 8px; cursor: pointer;
+  border: 1.5px solid transparent; transition: background 0.15s;
+}
+.behav-item.checked { background: rgba(208,74,74,0.08); border-color: rgba(208,74,74,0.3); }
+.behav-item input { display: none; }
+.behav-check {
+  width: 18px; height: 18px; border-radius: 5px;
+  border: 1.5px solid var(--border); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s; background: var(--bg);
+}
+.behav-item.checked .behav-check { background: var(--danger); border-color: var(--danger); }
+.behav-check::after { content: '✓'; color: white; font-size: 11px; opacity: 0; transition: opacity 0.15s; }
+.behav-item.checked .behav-check::after { opacity: 1; }
+.behav-text { font-size: 13px; }
+
+.free-text {
+  width: 100%; background: var(--bg); border: 1.5px solid var(--border);
+  border-radius: 10px; padding: 10px 12px; color: var(--text);
+  font-family: 'DM Sans', sans-serif; font-size: 13px; resize: none; min-height: 64px;
+}
+.free-text:focus { outline: none; border-color: var(--ward-accent); }
+.free-text::placeholder { color: var(--muted); }
+
+/* skip toggle */
+.skip-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: 10px;
+  background: rgba(107,140,109,0.07); margin-bottom: 10px;
+  cursor: pointer; border: 1.5px solid transparent;
+}
+.skip-row.skipped { background: rgba(107,140,109,0.15); border-color: var(--muted); }
+.skip-check {
+  width: 18px; height: 18px; border-radius: 5px;
+  border: 1.5px solid var(--muted); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg); transition: all 0.15s;
+}
+.skip-row.skipped .skip-check { background: var(--muted); border-color: var(--muted); }
+.skip-check::after { content: '✓'; color: white; font-size: 11px; opacity: 0; transition: opacity 0.15s; }
+.skip-row.skipped .skip-check::after { opacity: 1; }
+.skip-label { font-size: 13px; color: var(--muted); }
+
+/* ── SUBMIT BAR ── */
+.submit-bar {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  padding: 12px 16px 20px;
+  background: linear-gradient(to top, var(--bg) 60%, transparent);
+  z-index: 50;
+}
+.submit-btn {
+  width: 100%; padding: 16px; border-radius: var(--radius); border: none;
+  background: var(--ward-accent); color: #0F1410;
+  font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 600;
+  cursor: pointer; letter-spacing: -0.01em; transition: all 0.2s;
+}
+.submit-btn:active   { transform: scale(0.98); }
+.submit-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── SUCCESS ── */
+#success-screen {
+  display: none; flex-direction: column; align-items: center;
+  justify-content: center; min-height: 80dvh; padding: 40px 24px; gap: 20px; text-align: center;
+}
+#success-screen.visible { display: flex; }
+.success-icon { font-size: 56px; }
+.success-title { font-size: 26px; font-weight: 600; letter-spacing: -0.02em; }
+.success-sub   { font-size: 14px; color: var(--muted); line-height: 1.6; }
+.success-detail {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px 20px; width: 100%; max-width: 360px; text-align: left;
+}
+.success-detail-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: 13px; border-bottom: 1px solid var(--border); }
+.success-detail-row:last-child { border-bottom: none; }
+.success-detail-label { color: var(--muted); font-family: 'DM Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; }
+.success-detail-val   { font-weight: 500; color: var(--ward-accent); font-family: 'DM Mono', monospace; font-size: 12px; }
+.reset-btn {
+  padding: 12px 28px; border-radius: 40px; border: 1.5px solid var(--ward-accent);
+  background: none; color: var(--ward-accent);
+  font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500;
+  cursor: pointer; transition: all 0.2s;
+}
+.reset-btn:hover { background: var(--ward-accent); color: #0F1410; }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 80px; left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--danger); color: white;
+  padding: 12px 24px; border-radius: 40px;
+  font-weight: 600; font-size: 14px; z-index: 999;
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  white-space: nowrap;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<!-- PIN GATE -->
+<div id="pin-gate">
+  <div class="pin-ward-badge" id="pin-ward-badge">Ward</div>
+  <div>
+    <div class="pin-title">Handover Entry</div>
+    <div class="pin-sub" style="margin-top:6px">Enter PIN to begin bulk entry for your wing</div>
+  </div>
+  <div class="pin-display">
+    <div class="pin-dot" id="d0"></div><div class="pin-dot" id="d1"></div>
+    <div class="pin-dot" id="d2"></div><div class="pin-dot" id="d3"></div>
+  </div>
+  <div class="pin-pad">
+    <button class="pin-key" onclick="pinPress('1')">1</button>
+    <button class="pin-key" onclick="pinPress('2')">2</button>
+    <button class="pin-key" onclick="pinPress('3')">3</button>
+    <button class="pin-key" onclick="pinPress('4')">4</button>
+    <button class="pin-key" onclick="pinPress('5')">5</button>
+    <button class="pin-key" onclick="pinPress('6')">6</button>
+    <button class="pin-key" onclick="pinPress('7')">7</button>
+    <button class="pin-key" onclick="pinPress('8')">8</button>
+    <button class="pin-key" onclick="pinPress('9')">9</button>
+    <button class="pin-key clear" onclick="pinClear()">CLR</button>
+    <button class="pin-key" onclick="pinPress('0')">0</button>
+    <button class="pin-key del" onclick="pinDel()">⌫</button>
+  </div>
+  <div class="pin-error" id="pin-error"></div>
+</div>
+
+<!-- MAIN FORM -->
+<div id="main-content">
+  <div class="header">
+    <div class="header-left">
+      <span class="header-ward" id="header-ward">Ward</span>
+      <div class="header-title">Handover Entry</div>
+      <div class="header-sub" id="header-sub">—</div>
+    </div>
+    <div class="header-right">
+      <div class="progress-label" id="progress-label">0 / 0 rooms</div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" id="progress-bar" style="width:0%"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="rooms-list" id="rooms-list"></div>
+
+  <div class="submit-bar">
+    <button class="submit-btn" id="submit-btn" onclick="submitAll()">Save All Entries</button>
+  </div>
+</div>
+
+<!-- SUCCESS SCREEN -->
+<div id="success-screen">
+  <div class="success-icon">✅</div>
+  <div class="success-title">Handover Saved</div>
+  <div class="success-sub" id="success-sub">All entries submitted successfully.</div>
+  <div class="success-detail" id="success-detail"></div>
+  <button class="reset-btn" onclick="resetPage()">Enter Another Handover</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ════════════════════════════════════════════════
+// FIREBASE CONFIG — paste your new project values here
+// ════════════════════════════════════════════════
+const FIREBASE_CONFIG = {
+  apiKey:            "YOUR_API_KEY",
+  authDomain:        "YOUR_PROJECT_ID.firebaseapp.com",
+  databaseURL:       "https://YOUR_PROJECT_ID-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:         "YOUR_PROJECT_ID",
+  storageBucket:     "YOUR_PROJECT_ID.firebasestorage.app",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId:             "YOUR_APP_ID"
+};
+
+// ════════════════════════════════════════════════
+// STAFF PIN
+// ════════════════════════════════════════════════
+const STAFF_PIN = "1234";
+
+// ════════════════════════════════════════════════
+// WARD ROOMS — edit room numbers here if they change
+// ════════════════════════════════════════════════
+const WARD_ROOMS = {
+  Acacia:    [1,2,3,4,5,6,7,8,9,10,11,12],
+  Melaleuca: [1,2,3,4,5,6,7,8,9,10,11,12],
+  Jacaranda: [1,2,3,4,5,6,7,8,9,10,11,12],
+  Grevillea: [1,2,3,4,5,6,7,8,9,10,11,12,13,14],
+  Banksia:   [1,2,3,4,5,6,7,8,9,10]
+};
+
+const WARD_COLORS = {
+  Acacia:    { primary: "#2D6A4F", accent: "#52B788" },
+  Jacaranda: { primary: "#5E3A8C", accent: "#9B72CF" },
+  Melaleuca: { primary: "#1A6985", accent: "#48B5D8" },
+  Grevillea: { primary: "#B5451B", accent: "#E07A54" },
+  Banksia:   { primary: "#7A6522", accent: "#C9A84C" }
+};
+
+const BRISTOL_TYPES = [
+  { type:1, desc:"Hard lumps" }, { type:2, desc:"Lumpy sausage" },
+  { type:3, desc:"Cracks on surface" }, { type:4, desc:"Smooth sausage" },
+  { type:5, desc:"Soft blobs" }, { type:6, desc:"Fluffy, ragged" },
+  { type:7, desc:"Entirely liquid" }
+];
+
+const BEHAVIOUR_OPTIONS = [
+  "Agitation","Verbal aggression","Physical aggression",
+  "Wandering / exit-seeking","Refusal of care","Refusal of medications",
+  "Sundowning","Emotional distress / tearfulness","Calling out / vocalising",
+  "Sleep disturbance","Social withdrawal","Disinhibition","Repetitive behaviours"
+];
+
+// ── READ URL PARAM ──
+// QR code URL format: handover/?ward=Acacia
+const params = new URLSearchParams(location.search);
+const ward   = params.get("ward") || "Acacia";
+const rooms  = WARD_ROOMS[ward] || WARD_ROOMS["Acacia"];
+
+// ── APPLY WARD THEME ──
+if (WARD_COLORS[ward]) {
+  document.documentElement.style.setProperty("--ward-primary", WARD_COLORS[ward].primary);
+  document.documentElement.style.setProperty("--ward-accent",  WARD_COLORS[ward].accent);
+}
+
+// ── FIREBASE ──
+firebase.initializeApp(FIREBASE_CONFIG);
+const db = firebase.database();
+
+// ── DATE HELPERS (Brisbane = UTC+10, no DST) ──
+function getBrisbaneISOString() {
+  return new Date(Date.now() + 10 * 60 * 60 * 1000).toISOString();
+}
+function getWeekKey() {
+  const d   = new Date(getBrisbaneISOString());
+  const day = d.getUTCDay();
+  const mon = new Date(d);
+  mon.setUTCDate(d.getUTCDate() + (day === 0 ? -6 : 1 - day));
+  return "week_" + mon.toISOString().split("T")[0];
+}
+function getDayKey() {
+  return getBrisbaneISOString().split("T")[0];
+}
+
+// ── PIN ──
+let pinVal = "";
+function pinPress(n) { if (pinVal.length>=4) return; pinVal+=n; updatePinDots(); if (pinVal.length===4) setTimeout(checkPin,200); }
+function pinDel()   { pinVal=pinVal.slice(0,-1); updatePinDots(); }
+function pinClear() { pinVal=""; updatePinDots(); document.getElementById("pin-error").textContent=""; }
+function updatePinDots() {
+  [0,1,2,3].forEach(i => document.getElementById("d"+i).classList.toggle("filled", i < pinVal.length));
+}
+function checkPin() {
+  if (pinVal === STAFF_PIN) {
+    document.getElementById("pin-gate").style.display = "none";
+    document.getElementById("main-content").classList.add("visible");
+    initPage();
+  } else {
+    document.getElementById("pin-error").textContent = "Incorrect PIN — try again";
+    pinVal = ""; updatePinDots();
+    setTimeout(() => document.getElementById("pin-error").textContent = "", 2000);
+  }
+}
+
+// ── ROOM STATE ──
+// Stores per-room form state keyed by room number
+const roomState = {};
+
+function initRoomState(room) {
+  roomState[room] = {
+    skipped:      false,
+    bowels:       false,
+    bristolType:  null,
+    breakfast:    null,
+    lunch:        null,
+    dinner:       null,
+    fluidMl:      0,
+    behaviours:   new Set(),
+    notes:        ""
+  };
+}
+
+// ── INIT PAGE ──
+function initPage() {
+  document.getElementById("pin-ward-badge").textContent = ward;
+  document.getElementById("header-ward").textContent    = ward;
+  document.getElementById("header-sub").textContent =
+    new Date().toLocaleDateString("en-AU",{weekday:"long",day:"numeric",month:"long"});
+
+  rooms.forEach(r => initRoomState(r));
+  buildRoomCards();
+  updateProgress();
+}
+
+// ── BUILD ROOM CARDS ──
+function buildRoomCards() {
+  const list = document.getElementById("rooms-list");
+  list.innerHTML = "";
+
+  rooms.forEach(room => {
+    const card = document.createElement("div");
+    card.className = "room-card";
+    card.id = `card-${room}`;
+
+    card.innerHTML = `
+      <!-- HEADER (tap to expand) -->
+      <div class="room-card-header" onclick="toggleCard(${room})">
+        <div class="room-number">Room ${room}</div>
+        <div class="room-status-row">
+          <div class="room-summary-chips" id="chips-${room}">
+            <span class="sum-chip sum-chip-muted">No data yet</span>
+          </div>
+        </div>
+        <div class="room-chevron">▼</div>
+      </div>
+
+      <!-- FORM (collapsible) -->
+      <div class="room-form" id="form-${room}">
+
+        <!-- Skip toggle -->
+        <div class="skip-row" id="skip-row-${room}" onclick="toggleSkip(${room})">
+          <div class="skip-check" id="skip-check-${room}"></div>
+          <span class="skip-label">Room vacant / not applicable — skip this room</span>
+        </div>
+
+        <div id="form-fields-${room}">
+          <!-- BOWELS -->
+          <div class="form-row">
+            <div>
+              <div class="form-label">🧻 Opened Bowels</div>
+              <div class="form-sub">Toggle on if a bowel action occurred</div>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="bowels-${room}" onchange="onBowelsChange(${room})">
+              <span class="toggle-track"></span>
+            </label>
+          </div>
+
+          <div class="bristol-wrap" id="bristol-wrap-${room}" style="display:none">
+            <div class="form-section-label">Bristol Stool Scale — select type</div>
+            <div class="bristol-grid" id="bristol-grid-${room}"></div>
+          </div>
+
+          <!-- MEALS -->
+          <div class="meals-wrap">
+            <div class="form-section-label">🍽️ Meal Intake</div>
+            ${["breakfast","lunch","dinner"].map(meal => `
+              <div class="meal-row">
+                <div class="meal-label">${meal[0].toUpperCase()+meal.slice(1)}</div>
+                <div class="pct-btns" id="meal-${meal}-${room}"></div>
+              </div>`).join("")}
+          </div>
+
+          <!-- FLUID -->
+          <div class="fluid-row">
+            <div class="fluid-label">💧 Total Fluid Intake</div>
+            <input class="fluid-input" type="number" id="fluid-${room}"
+              placeholder="0" min="0" max="5000"
+              oninput="onFluidChange(${room})">
+            <span class="fluid-unit">mL</span>
+          </div>
+
+          <!-- BEHAVIOURS -->
+          <div class="behav-wrap">
+            <div class="form-section-label" style="margin-bottom:10px">⚠️ Significant Behaviours</div>
+            <div class="behav-grid" id="behav-grid-${room}"></div>
+            <textarea class="free-text" id="notes-${room}"
+              placeholder="Additional notes (optional)…" rows="2"
+              oninput="onNotesChange(${room})"></textarea>
+          </div>
+        </div><!-- /form-fields -->
+
+      </div><!-- /room-form -->
+    `;
+
+    list.appendChild(card);
+    buildBristolGrid(room);
+    buildMealButtons(room);
+    buildBehaviourGrid(room);
+  });
+}
+
+// ── BRISTOL GRID ──
+function buildBristolGrid(room) {
+  const grid = document.getElementById(`bristol-grid-${room}`);
+  BRISTOL_TYPES.forEach(b => {
+    const btn = document.createElement("button");
+    btn.className = "bristol-btn";
+    btn.innerHTML = `<span class="type-num">${b.type}</span><span class="type-desc">${b.desc}</span>`;
+    btn.onclick = () => {
+      grid.querySelectorAll(".bristol-btn").forEach(x => x.classList.remove("selected"));
+      btn.classList.add("selected");
+      roomState[room].bristolType = b.type;
+      updateChips(room);
+    };
+    grid.appendChild(btn);
+  });
+}
+
+// ── MEAL BUTTONS ──
+function buildMealButtons(room) {
+  ["breakfast","lunch","dinner"].forEach(meal => {
+    const wrap = document.getElementById(`meal-${meal}-${room}`);
+    ["0%","25%","50%","75%","100%"].forEach(pct => {
+      const btn = document.createElement("button");
+      btn.className = "pct-btn";
+      btn.textContent = pct;
+      btn.onclick = () => {
+        wrap.querySelectorAll(".pct-btn").forEach(x => x.classList.remove("selected"));
+        btn.classList.add("selected");
+        roomState[room][meal] = pct;
+        updateChips(room);
+        updateProgress();
+      };
+      wrap.appendChild(btn);
+    });
+  });
+}
+
+// ── BEHAVIOUR GRID ──
+function buildBehaviourGrid(room) {
+  const grid = document.getElementById(`behav-grid-${room}`);
+  BEHAVIOUR_OPTIONS.forEach(opt => {
+    const item = document.createElement("label");
+    item.className = "behav-item";
+    item.innerHTML = `<input type="checkbox"><div class="behav-check"></div><span class="behav-text">${opt}</span>`;
+    const cb = item.querySelector("input");
+    cb.onchange = () => {
+      item.classList.toggle("checked", cb.checked);
+      if (cb.checked) roomState[room].behaviours.add(opt);
+      else roomState[room].behaviours.delete(opt);
+      updateChips(room);
+    };
+    grid.appendChild(item);
+  });
+}
+
+// ── TOGGLE CARD ──
+function toggleCard(room) {
+  const card = document.getElementById(`card-${room}`);
+  const isOpen = card.classList.contains("is-expanded");
+  // Close all others
+  rooms.forEach(r => {
+    document.getElementById(`card-${r}`).classList.remove("is-expanded");
+  });
+  if (!isOpen) card.classList.add("is-expanded");
+}
+
+// ── SKIP ROOM ──
+function toggleSkip(room) {
+  const state = roomState[room];
+  state.skipped = !state.skipped;
+  const row   = document.getElementById(`skip-row-${room}`);
+  const fields = document.getElementById(`form-fields-${room}`);
+  const card   = document.getElementById(`card-${room}`);
+  row.classList.toggle("skipped", state.skipped);
+  fields.style.opacity  = state.skipped ? "0.3" : "1";
+  fields.style.pointerEvents = state.skipped ? "none" : "auto";
+  card.classList.toggle("has-data", state.skipped);
+  updateChips(room);
+  updateProgress();
+}
+
+// ── BOWELS CHANGE ──
+function onBowelsChange(room) {
+  const on = document.getElementById(`bowels-${room}`).checked;
+  roomState[room].bowels = on;
+  document.getElementById(`bristol-wrap-${room}`).style.display = on ? "block" : "none";
+  if (!on) {
+    roomState[room].bristolType = null;
+    document.getElementById(`bristol-grid-${room}`).querySelectorAll(".bristol-btn").forEach(x => x.classList.remove("selected"));
+  }
+  updateChips(room);
+  updateProgress();
+}
+
+function onFluidChange(room) {
+  roomState[room].fluidMl = parseInt(document.getElementById(`fluid-${room}`).value) || 0;
+  updateChips(room);
+}
+
+function onNotesChange(room) {
+  roomState[room].notes = document.getElementById(`notes-${room}`).value.trim();
+}
+
+// ── UPDATE SUMMARY CHIPS (shown in collapsed header) ──
+function updateChips(room) {
+  const s    = roomState[room];
+  const wrap = document.getElementById(`chips-${room}`);
+  const card = document.getElementById(`card-${room}`);
+  const chips = [];
+
+  if (s.skipped) {
+    chips.push(`<span class="sum-chip sum-chip-muted">Skipped</span>`);
+  } else {
+    if (s.bowels) chips.push(`<span class="sum-chip sum-chip-ok">Bowels ✓${s.bristolType?" T"+s.bristolType:""}</span>`);
+    const meals = [s.breakfast, s.lunch, s.dinner].filter(Boolean);
+    if (meals.length) {
+      const hasLow = [s.breakfast,s.lunch,s.dinner].some(v => ["0%","25%"].includes(v));
+      chips.push(`<span class="sum-chip ${hasLow?"sum-chip-warn":"sum-chip-ok"}">${meals.length} meal${meals.length>1?"s":""}</span>`);
+    }
+    if (s.fluidMl) chips.push(`<span class="sum-chip sum-chip-ok">💧${s.fluidMl}mL</span>`);
+    if (s.behaviours.size) chips.push(`<span class="sum-chip sum-chip-alert">⚠ ${s.behaviours.size} behaviour${s.behaviours.size>1?"s":""}</span>`);
+    if (!chips.length) chips.push(`<span class="sum-chip sum-chip-muted">No data yet</span>`);
+  }
+
+  wrap.innerHTML = chips.join("");
+  const hasAnyData = s.skipped || s.bowels || s.breakfast || s.lunch || s.dinner || s.fluidMl || s.behaviours.size;
+  card.classList.toggle("has-data", !!hasAnyData);
+}
+
+// ── PROGRESS BAR ──
+function updateProgress() {
+  const total   = rooms.length;
+  const done    = rooms.filter(r => {
+    const s = roomState[r];
+    return s.skipped || s.bowels || s.breakfast || s.lunch || s.dinner || s.fluidMl || s.behaviours.size;
+  }).length;
+  const pct = total ? Math.round((done/total)*100) : 0;
+  document.getElementById("progress-label").textContent = `${done} / ${total} rooms`;
+  document.getElementById("progress-bar").style.width   = pct + "%";
+}
+
+// ── SUBMIT ALL ──
+async function submitAll() {
+  const btn = document.getElementById("submit-btn");
+  btn.disabled = true;
+  btn.textContent = "Saving…";
+
+  const now     = Date.now();
+  const weekKey = getWeekKey();
+  const dayKey  = getDayKey();
+  const writes  = [];
+  let savedCount = 0;
+  let skippedCount = 0;
+
+  rooms.forEach(room => {
+    const s = roomState[room];
+    if (s.skipped) { skippedCount++; return; }
+
+    // Only save rooms where at least one field was filled in
+    const hasData = s.bowels || s.breakfast || s.lunch || s.dinner || s.fluidMl || s.behaviours.size || s.notes;
+    if (!hasData) return;
+
+    const resId = `${ward.toLowerCase()}_${room}`;
+    const entry = {
+      timestamp:   now,
+      resId,
+      room:        String(room),
+      ward,
+      bowels:      s.bowels,
+      bristolType: s.bristolType,
+      meals: {
+        breakfast: s.breakfast,
+        lunch:     s.lunch,
+        dinner:    s.dinner
+      },
+      fluidMl:    s.fluidMl,
+      behaviours: [...s.behaviours],
+      notes:      s.notes,
+      date:       dayKey,
+      week:       weekKey,
+      source:     "handover" // marks this was entered via handover page
+    };
+
+    const path = `wards/${ward}/residents/${resId}/entries/${weekKey}/${dayKey}/${now}_${room}`;
+    // Also store room number for dashboard
+    writes.push(db.ref(`wards/${ward}/residents/${resId}/room`).set(String(room)));
+    writes.push(db.ref(path).set(entry));
+    savedCount++;
+  });
+
+  if (!writes.length) {
+    showToast("No data entered — fill in at least one room first");
+    btn.disabled = false;
+    btn.textContent = "Save All Entries";
+    return;
+  }
+
+  try {
+    await Promise.all(writes);
+    showSuccess(savedCount, skippedCount);
+  } catch(e) {
+    showToast("Save failed — check your connection");
+    console.error(e);
+    btn.disabled = false;
+    btn.textContent = "Save All Entries";
+  }
+}
+
+// ── SUCCESS SCREEN ──
+function showSuccess(saved, skipped) {
+  document.getElementById("main-content").classList.remove("visible");
+  const screen = document.getElementById("success-screen");
+  screen.classList.add("visible");
+
+  const today = new Date().toLocaleDateString("en-AU",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+  const time  = new Date().toLocaleTimeString("en-AU",{timeZone:"Australia/Brisbane",hour:"2-digit",minute:"2-digit"});
+  const notEntered = rooms.length - saved - skipped;
+
+  document.getElementById("success-sub").textContent =
+    `${saved} room${saved!==1?"s":""} saved to Firebase for ${ward} Ward.`;
+
+  document.getElementById("success-detail").innerHTML = `
+    <div class="success-detail-row">
+      <span class="success-detail-label">Ward</span>
+      <span class="success-detail-val">${ward}</span>
+    </div>
+    <div class="success-detail-row">
+      <span class="success-detail-label">Date</span>
+      <span class="success-detail-val">${today}</span>
+    </div>
+    <div class="success-detail-row">
+      <span class="success-detail-label">Submitted</span>
+      <span class="success-detail-val">${time}</span>
+    </div>
+    <div class="success-detail-row">
+      <span class="success-detail-label">Rooms saved</span>
+      <span class="success-detail-val">${saved}</span>
+    </div>
+    ${skipped ? `<div class="success-detail-row">
+      <span class="success-detail-label">Skipped</span>
+      <span class="success-detail-val">${skipped}</span>
+    </div>` : ""}
+    ${notEntered ? `<div class="success-detail-row">
+      <span class="success-detail-label">No data entered</span>
+      <span class="success-detail-val">${notEntered}</span>
+    </div>` : ""}
+  `;
+}
+
+function resetPage() {
+  rooms.forEach(r => initRoomState(r));
+  document.getElementById("success-screen").classList.remove("visible");
+  document.getElementById("main-content").classList.add("visible");
+  document.getElementById("submit-btn").disabled = false;
+  document.getElementById("submit-btn").textContent = "Save All Entries";
+  buildRoomCards();
+  updateProgress();
+  window.scrollTo(0,0);
+}
+
+// ── TOAST ──
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 3000);
+}
+</script>
+</body>
+</html>
