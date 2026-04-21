@@ -450,7 +450,8 @@ if (WARD_COLORS[ward]) {
 // ── FIREBASE ──
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
-
+const auth = firebase.auth();
+   
 // ── DATE HELPERS (Brisbane = UTC+10, no DST) ──
 function getBrisbaneISOString() {
   return new Date(Date.now() + 10 * 60 * 60 * 1000).toISOString();
@@ -474,15 +475,31 @@ function pinClear() { pinVal=""; updatePinDots(); document.getElementById("pin-e
 function updatePinDots() {
   [0,1,2,3].forEach(i => document.getElementById("d"+i).classList.toggle("filled", i < pinVal.length));
 }
+
 function checkPin() {
   if (pinVal === STAFF_PIN) {
-    document.getElementById("pin-gate").style.display = "none";
-    document.getElementById("main-content").classList.add("visible");
-    initPage();
+
+    firebase.auth().signInAnonymously()
+      .then(() => {
+        // ✅ Auth succeeded
+        document.getElementById("pin-gate").style.display = "none";
+        document.getElementById("app").classList.add("visible");
+
+        initApp(); // ✅ ONLY called after auth
+      })
+      .catch((error) => {
+        console.error("Auth error:", error);
+        document.getElementById("pin-error").textContent =
+          "Authentication failed";
+      });
+
   } else {
-    document.getElementById("pin-error").textContent = "Incorrect PIN — try again";
-    pinVal = ""; updatePinDots();
-    setTimeout(() => document.getElementById("pin-error").textContent = "", 2000);
+    document.getElementById("pin-error").textContent = "Incorrect PIN";
+    pinVal = "";
+    updatePinDots();
+    setTimeout(() =>
+      document.getElementById("pin-error").textContent = "", 2000
+    );
   }
 }
 
