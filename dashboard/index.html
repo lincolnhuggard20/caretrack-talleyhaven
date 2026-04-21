@@ -433,8 +433,7 @@ const WARDS = ["Acacia","Jacaranda","Melaleuca","Grevillea","Banksia"];
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
-const auth = firebase.auth()
-   
+
 let Historicalcache = {};
 let activeWard    = "Acacia";
 let wardDataCache = {};
@@ -450,31 +449,15 @@ function pinClear() { pinVal=""; updatePinDots(); document.getElementById("pin-e
 function updatePinDots() {
   [0,1,2,3].forEach(i => document.getElementById("d"+i).classList.toggle("filled", i < pinVal.length));
 }
-
 function checkPin() {
   if (pinVal === STAFF_PIN) {
-
-    firebase.auth().signInAnonymously()
-      .then(() => {
-        // ✅ Auth succeeded
-        document.getElementById("pin-gate").style.display = "none";
-        document.getElementById("app").classList.add("visible");
-
-        initApp(); // ✅ ONLY called after auth
-      })
-      .catch((error) => {
-        console.error("Auth error:", error);
-        document.getElementById("pin-error").textContent =
-          "Authentication failed";
-      });
-
+    document.getElementById("pin-gate").style.display = "none";
+    document.getElementById("app").classList.add("visible");
+    initApp();
   } else {
     document.getElementById("pin-error").textContent = "Incorrect PIN";
-    pinVal = "";
-    updatePinDots();
-    setTimeout(() =>
-      document.getElementById("pin-error").textContent = "", 2000
-    );
+    pinVal = ""; updatePinDots();
+    setTimeout(() => document.getElementById("pin-error").textContent = "", 2000);
   }
 }
 
