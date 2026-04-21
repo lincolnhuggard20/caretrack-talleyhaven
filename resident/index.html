@@ -14,13 +14,13 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
 
 :root {
-  --ward-primary: #F5276C;
-  --ward-accent:  #F5276C;
-  --bg:     #3D4849;
+  --ward-primary: #2D6A4F;
+  --ward-accent:  #52B788;
+  --bg:     #0F1410;
   --card:   #161D17;
   --border: #1E2B1F;
   --text:   #E8F0E9;
-  --muted:  #F5276C;
+  --muted:  #6B8C6D;
   --danger: #E05252;
   --warn:   #D4A24A;
   --radius: 14px;
@@ -361,14 +361,14 @@ body {
 // ════════════════════════════════════════════════
 // FIREBASE CONFIG — replace with your new project values
 // ════════════════════════════════════════════════
-const firebaseConfig = {
-  apiKey: "AIzaSyAAkDnIWux7w07bwY9xs_XsuFd9J7D_hqw",
-  authDomain: "caretrack-28ca3.firebaseapp.com",
-  databaseURL: "https://caretrack-28ca3-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "caretrack-28ca3",
-  storageBucket: "caretrack-28ca3.firebasestorage.app",
-  messagingSenderId: "347899862763",
-  appId: "1:347899862763:web:6387583135eff793d968ae",
+const FIREBASE_CONFIG = {
+  apiKey:            "YOUR_API_KEY",
+  authDomain:        "YOUR_PROJECT_ID.firebaseapp.com",
+  databaseURL:       "https://YOUR_PROJECT_ID-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:         "YOUR_PROJECT_ID",
+  storageBucket:     "YOUR_PROJECT_ID.firebasestorage.app",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId:             "YOUR_APP_ID"
 };
 
 const STAFF_PIN = "1234";
@@ -387,7 +387,7 @@ const BEHAVIOUR_OPTIONS = [
   "Agitation","Verbal aggression","Physical aggression",
   "Wandering / exit-seeking","Refusal of care","Refusal of medications",
   "Sundowning","Emotional distress / tearfulness","Calling out / vocalising",
-  "Sleep disturbance","Social withdrawal","Impulsive","Repetitive behaviours"
+  "Sleep disturbance","Social withdrawal","Disinhibition","Repetitive behaviours"
 ];
 
 const WARD_COLORS = {
@@ -417,7 +417,7 @@ document.getElementById("room-name-display").textContent = "Room " + room;
 document.getElementById("header-date").textContent = new Date().toLocaleDateString("en-AU",{weekday:"short",day:"numeric",month:"short"});
 
 // ── FIREBASE ──
-firebase.initializeApp(firebaseConfig);
+firebase.initializeApp(FIREBASE_CONFIG);
 const db = firebase.database();
 
 // ── DATE HELPERS (Brisbane = UTC+10, no DST) ──
@@ -473,41 +473,23 @@ BRISTOL_TYPES.forEach(b => {
 });
 
 // ── MEAL BUTTONS ──
-const meals = ["breakfast", "lunch", "dinner"];
+const meals = ["breakfast","lunch","dinner"];
 const mealSelections = { breakfast: null, lunch: null, dinner: null };
-
 meals.forEach(meal => {
   const wrap = document.getElementById("meal-" + meal);
-  
-  // SAFETY CHECK: If the element doesn't exist on the page, don't run the code
-  if (!wrap) return; 
-
-  ["0%", "25%", "50%", "75%", "100%"].forEach(pct => {
+  ["0%","25%","50%","75%","100%"].forEach(pct => {
     const btn = document.createElement("button");
     btn.className = "pct-btn";
     btn.textContent = pct;
-    
     btn.onclick = () => {
-      // 1. Store the current state before we clear anything
-      const wasAlreadySelected = btn.classList.contains("selected");
-
-      // 2. Clear 'selected' from all buttons in this specific meal row
       wrap.querySelectorAll(".pct-btn").forEach(x => x.classList.remove("selected"));
-
-      // 3. Toggle logic
-      if (wasAlreadySelected) {
-        mealSelections[meal] = null; // Unset the data
-        // We leave the button unselected (already cleared in step 2)
-      } else {
-        btn.classList.add("selected"); // Highlight this button
-        mealSelections[meal] = pct;    // Save the data
-      }
+      btn.classList.add("selected");
+      mealSelections[meal] = pct;
     };
-    
     wrap.appendChild(btn);
   });
 });
-  
+
 // ── BEHAVIOUR CHECKBOXES ──
 const checkedBehaviours = new Set();
 BEHAVIOUR_OPTIONS.forEach(opt => {
